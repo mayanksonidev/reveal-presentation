@@ -1,0 +1,234 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+	<title>Kubernetes Secrets - 60 Seconds</title>
+
+	<!-- Reveal.js CDN -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/white.min.css">
+
+	<!-- Syntax Highlighting for Code -->
+	<link rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/monokai.min.css">
+
+	<!-- Custom Styling for YouTube Shorts (Mobile format) -->
+	<style>
+		:root {
+			--k8s-blue: #326CE5;
+			--secret-dark: #121212;
+			--text-main: #333333;
+		}
+
+		body {
+			background-color: #2b2b2b;
+			/* Dark backdrop for the outer screen */
+		}
+
+		/* Add a border and background to the actual 1080x1920 frame */
+		.reveal .slides {
+			background-color: #f8f9fa;
+			border: 12px dashed #ff0055;
+			/* A bright dashed border clearly shows the recording boundary */
+			box-sizing: border-box;
+			box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+		}
+
+		.reveal h1,
+		.reveal h2,
+		.reveal h3 {
+			color: var(--k8s-blue);
+			font-family: 'Helvetica Neue', sans-serif;
+			font-weight: bold;
+		}
+
+		/* Resize headings for the vertical format */
+		.reveal h1 {
+			font-size: 4em;
+		}
+
+		.reveal h2 {
+			font-size: 3em;
+			margin-bottom: 40px;
+		}
+
+		.reveal h3 {
+			font-size: 2.5em;
+		}
+
+		.reveal p,
+		.reveal li {
+			color: var(--text-main);
+			font-size: 2em;
+			line-height: 1.4;
+		}
+
+		.reveal ul {
+			margin-left: 1em;
+		}
+
+		.reveal li {
+			margin-bottom: 0.8em;
+		}
+
+		/* Gradient Backgrounds */
+		.gradient-bg {
+			background: linear-gradient(135deg, #326CE5 0%, #1a237e 100%);
+			color: white !important;
+		}
+
+		.gradient-bg h1,
+		.gradient-bg h2,
+		.gradient-bg h3,
+		.gradient-bg p,
+		.gradient-bg li {
+			color: white !important;
+		}
+
+		.icon-container {
+			font-size: 6em;
+			margin-bottom: 30px;
+		}
+
+		/* Target the pre element explicitly to override reveal theme defaults */
+		.reveal pre.code-wrapper {
+			box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+			border-radius: 16px;
+			font-size: 1em;
+			width: 85%;
+			margin: 30px auto;
+		}
+
+		.box {
+			background: #e3f2fd;
+			padding: 50px;
+			border-radius: 20px;
+			margin: 50px 0;
+			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+		}
+	</style>
+</head>
+
+<body>
+	<div class="reveal">
+		<div class="slides">
+
+			<!-- SLIDE 1: Title -->
+			<section class="gradient-bg">
+				<div class="icon-container">🔐</div>
+				<h1>K8s Secrets</h1>
+				<h3 style="margin-top: 30px;">Stop Hardcoding<br>Passwords!</h3>
+				<p
+					style="margin-top: 60px; font-weight: bold; padding: 25px; background: rgba(255,255,255,0.2); border-radius: 20px; display: inline-block;">
+					Explained in 60 Sec</p>
+			</section>
+
+			<!-- SLIDE 2: The Problem -->
+			<section>
+				<div class="icon-container">🛑</div>
+				<h2>The Danger Zone</h2>
+				<div class="box" style="background: #ffebee;">
+					<p>Storing API keys, tokens, and passwords directly in code is a <b>MAJOR</b> security risk.</p>
+				</div>
+				<p class="fragment" style="color: #d32f2f; font-weight: bold; font-size: 2.2em;">Anyone with access to
+					your code sees your secrets! 👀</p>
+			</section>
+
+			<!-- SLIDE 3: The Solution -->
+			<section>
+				<div class="icon-container">🛡️</div>
+				<h2>Enter K8s Secrets</h2>
+				<div class="box">
+					<p>Secrets let you store and manage sensitive info <b>OUTSIDE</b> of your Pods and container images.
+					</p>
+				</div>
+				<p class="fragment" style="font-weight: bold; font-size: 2.2em; color: #2e7d32;">Better security,
+					cleaner code! ✨</p>
+			</section>
+
+			<!-- SLIDE 4: Under the Hood -->
+			<section>
+				<div class="icon-container">🔍</div>
+				<h2>Under the Hood</h2>
+				<ul style="margin-top: 50px;">
+					<li class="fragment">They are <b>Base64 Encoded</b> 🧩</li>
+					<li class="fragment" style="color: #d32f2f; font-weight: bold;">NOT encrypted by default!</li>
+					<li class="fragment">Max size: <b>1MB</b> per secret</li>
+				</ul>
+			</section>
+
+			<!-- SLIDE 5: Usage -->
+			<section>
+				<div class="icon-container">🔌</div>
+				<h2>How to Use Them</h2>
+				<p>Mount Secrets to your Pods as:</p>
+				<div style="display: flex; flex-direction: column; gap: 40px; margin-top: 50px;">
+					<div class="fragment"
+						style="background: #f3e5f5; padding: 40px; border-radius: 20px; font-weight: bold; font-size: 1.8em;">
+						1. Environment Variables 💻</div>
+					<div class="fragment"
+						style="background: #e8f5e9; padding: 40px; border-radius: 20px; font-weight: bold; font-size: 1.8em;">
+						2. Files in a Volume 📁</div>
+				</div>
+			</section>
+
+			<!-- SLIDE 6: YAML -->
+			<section>
+				<h2>Secret YAML</h2>
+				<pre class="code-wrapper"><code class="yaml" data-trim data-noescape>
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-pass
+type: Opaque
+data:
+  # Values MUST be Base64 encoded!
+  password: c3VwZXJzZWNyZXQ= 
+				</code></pre>
+				<p class="fragment" style="font-size: 1.5em; margin-top: 50px; color: #666; font-style: italic;">
+					(c3Vw... decodes to "supersecret")</p>
+			</section>
+
+			<!-- SLIDE 7: Summary -->
+			<section class="gradient-bg">
+				<h2>Recap 🎬</h2>
+				<ul style="line-height: 2; margin-top: 40px;">
+					<li>✅ Decouple secrets from code</li>
+					<li>✅ Store keys, passwords, tokens</li>
+					<li>✅ Base64 Encoded (not encrypted)</li>
+					<li>✅ Mount as Env Vars or Files</li>
+				</ul>
+				<div
+					style="margin-top: 80px; padding: 30px; background: rgba(255,255,255,0.2); border-radius: 20px; display: inline-block;">
+					<p style="margin: 0; font-weight: bold; font-size: 1.2em;">Subscribe for more K8s! 🚀</p>
+				</div>
+			</section>
+
+		</div>
+	</div>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
+	<script>
+		Reveal.initialize({
+			// YouTube Short Dimensions (9:16 aspect ratio, e.g. 1080x1920)
+			width: 1080,
+			height: 1920,
+			margin: 0.05,
+			minScale: 0.1,
+			maxScale: 2.0,
+
+			hash: true,
+			slideNumber: false, // Turn off for cleaner shorts
+			controls: false,    // Turn off arrows for cleaner shorts
+			progress: true,     // Optional progress bar at the bottom
+			plugins: [RevealHighlight]
+		});
+	</script>
+</body>
+
+</html>
