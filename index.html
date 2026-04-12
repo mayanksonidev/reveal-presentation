@@ -1,115 +1,86 @@
 <!doctype html>
 <html>
-
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-	<title>Kubernetes Secrets - 60 Seconds</title>
+	<title>Kubernetes Probes Explained</title>
 
 	<!-- Reveal.js CDN -->
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/white.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/night.min.css" id="theme">
 
 	<!-- Syntax Highlighting for Code -->
-	<link rel="stylesheet"
-		href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/monokai.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/monokai.min.css">
 
-	<!-- Custom Styling for YouTube Shorts (Mobile format) -->
+	<!-- Custom Styling for Long-Form Desktop Presentation -->
 	<style>
 		:root {
 			--k8s-blue: #326CE5;
-			--secret-dark: #121212;
-			--text-main: #333333;
+			--k8s-dark-blue: #1a237e;
+			--accent: #ff4081;
+			--text-main: #e0e0e0;
 		}
 
-		body {
-			background-color: #2b2b2b;
-			/* Dark backdrop for the outer screen */
-		}
-
-		/* Add a border and background to the actual 1080x1920 frame */
-		.reveal .slides {
-			background-color: #f8f9fa;
-			border: 12px dashed #ff0055;
-			/* A bright dashed border clearly shows the recording boundary */
-			box-sizing: border-box;
-			box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
-		}
-
-		.reveal h1,
-		.reveal h2,
-		.reveal h3 {
-			color: var(--k8s-blue);
+		.reveal h1, .reveal h2, .reveal h3 {
 			font-family: 'Helvetica Neue', sans-serif;
 			font-weight: bold;
+			text-transform: none;
 		}
 
-		/* Resize headings for the vertical format */
-		.reveal h1 {
-			font-size: 4em;
-		}
+		.reveal h1 { color: var(--k8s-blue); font-size: 3.5em; }
+		.reveal h2 { color: var(--k8s-blue); font-size: 2.5em; margin-bottom: 40px; }
+		.reveal h3 { font-size: 1.8em; }
 
-		.reveal h2 {
-			font-size: 3em;
-			margin-bottom: 40px;
-		}
-
-		.reveal h3 {
-			font-size: 2.5em;
-		}
-
-		.reveal p,
-		.reveal li {
+		.reveal p, .reveal li {
 			color: var(--text-main);
-			font-size: 2em;
-			line-height: 1.4;
+			font-size: 1.2em;
+			line-height: 1.6;
 		}
 
-		.reveal ul {
-			margin-left: 1em;
-		}
-
-		.reveal li {
-			margin-bottom: 0.8em;
-		}
-
-		/* Gradient Backgrounds */
-		.gradient-bg {
-			background: linear-gradient(135deg, #326CE5 0%, #1a237e 100%);
-			color: white !important;
-		}
-
-		.gradient-bg h1,
-		.gradient-bg h2,
-		.gradient-bg h3,
-		.gradient-bg p,
-		.gradient-bg li {
-			color: white !important;
-		}
-
-		.icon-container {
-			font-size: 6em;
-			margin-bottom: 30px;
-		}
-
-		/* Target the pre element explicitly to override reveal theme defaults */
 		.reveal pre.code-wrapper {
-			box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+			box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
 			border-radius: 16px;
-			font-size: 1em;
-			width: 85%;
+			font-size: 1.1em;
+			width: 90%;
 			margin: 30px auto;
 		}
 
-		.box {
-			background: #e3f2fd;
-			padding: 50px;
-			border-radius: 20px;
-			margin: 50px 0;
-			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        .reveal .code-wrapper code {
+            padding: 30px;
+        }
+
+		.icon-container { font-size: 3em; margin-bottom: 20px; }
+		
+		.highlight-box {
+			background: rgba(50, 108, 229, 0.15);
+			padding: 30px;
+			border-radius: 15px;
+			border-left: 5px solid var(--k8s-blue);
+			margin: 30px 0;
 		}
+		
+		.sequence-container {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			gap: 30px;
+			margin-top: 50px;
+		}
+		
+		.sequence-step {
+			background: #2a2a35;
+			padding: 30px;
+			border-radius: 15px;
+			border: 2px solid var(--k8s-blue);
+			width: 300px;
+			box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+		}
+		
+		.sequence-arrow { font-size: 2.5em; color: var(--accent); }
+		
+		.recap-list li { margin-bottom: 20px; }
 	</style>
 </head>
 
@@ -117,94 +88,154 @@
 	<div class="reveal">
 		<div class="slides">
 
-			<!-- SLIDE 1: Title -->
-			<section class="gradient-bg">
-				<div class="icon-container">🔐</div>
-				<h1>K8s Secrets</h1>
-				<h3 style="margin-top: 30px;">Stop Hardcoding<br>Passwords!</h3>
-				<p
-					style="margin-top: 60px; font-weight: bold; padding: 25px; background: rgba(255,255,255,0.2); border-radius: 20px; display: inline-block;">
-					Explained in 60 Sec</p>
+			<!-- Slide 1: Title -->
+			<section>
+				<div class="icon-container">🩺</div>
+				<h1>Kubernetes Probes</h1>
+				<h3 style="margin-top: 20px; color: #a0a0a0;">Ensuring Application Health and Reliability</h3>
 			</section>
 
-			<!-- SLIDE 2: The Problem -->
+			<!-- Slide 2: Why Probes? -->
 			<section>
-				<div class="icon-container">🛑</div>
-				<h2>The Danger Zone</h2>
-				<div class="box" style="background: #ffebee;">
-					<p>Storing API keys, tokens, and passwords directly in code is a <b>MAJOR</b> security risk.</p>
+				<h2>Why Do We Need Probes?</h2>
+				<div style="display: flex; gap: 40px; margin-top: 40px; align-items: stretch; justify-content: center;">
+					<div class="highlight-box fragment" style="flex: 1; display: flex; flex-direction: column;">
+						<h3>Without Probes ❌</h3>
+						<p>K8s only knows if your container process is running.</p>
+						<p>It doesn't know if your app is deadlocked, crashing, or stuck loading data.</p>
+					</div>
+					<div class="highlight-box fragment" style="flex: 1; border-left-color: #2e7d32; background: rgba(46, 125, 50, 0.15); display: flex; flex-direction: column;">
+						<h3>With Probes ✅</h3>
+						<p>K8s understands the <strong>actual state</strong> of your application.</p>
+						<p>It can automatically restart failed apps and route traffic only when ready.</p>
+					</div>
 				</div>
-				<p class="fragment" style="color: #d32f2f; font-weight: bold; font-size: 2.2em;">Anyone with access to
-					your code sees your secrets! 👀</p>
 			</section>
 
-			<!-- SLIDE 3: The Solution -->
+			<!-- Slide 3: The Sequence -->
 			<section>
-				<div class="icon-container">🛡️</div>
-				<h2>Enter K8s Secrets</h2>
-				<div class="box">
-					<p>Secrets let you store and manage sensitive info <b>OUTSIDE</b> of your Pods and container images.
-					</p>
+				<h2>The Probe Sequence</h2>
+				<p>Probes happen in a very specific order during a Pod's lifecycle.</p>
+				<div class="sequence-container">
+					<div class="sequence-step fragment">
+						<h3 style="color: #ff9800;">1. Startup</h3>
+						<p style="font-size: 0.9em; margin-top: 15px;">Has the application finished initializing?</p>
+					</div>
+					<div class="sequence-arrow fragment">➔</div>
+					<div class="sequence-step fragment">
+						<h3 style="color: #e91e63;">2. Liveness</h3>
+						<p style="font-size: 0.9em; margin-top: 15px;">Is the application still alive and healthy?</p>
+					</div>
+					<div class="sequence-arrow fragment">➔</div>
+					<div class="sequence-step fragment">
+						<h3 style="color: #4caf50;">3. Readiness</h3>
+						<p style="font-size: 0.9em; margin-top: 15px;">Can it accept network traffic right now?</p>
+					</div>
 				</div>
-				<p class="fragment" style="font-weight: bold; font-size: 2.2em; color: #2e7d32;">Better security,
-					cleaner code! ✨</p>
 			</section>
 
-			<!-- SLIDE 4: Under the Hood -->
+			<!-- Slide 4: Startup Probe -->
 			<section>
-				<div class="icon-container">🔍</div>
-				<h2>Under the Hood</h2>
-				<ul style="margin-top: 50px;">
-					<li class="fragment">They are <b>Base64 Encoded</b> 🧩</li>
-					<li class="fragment" style="color: #d32f2f; font-weight: bold;">NOT encrypted by default!</li>
-					<li class="fragment">Max size: <b>1MB</b> per secret</li>
+				<div class="icon-container" style="color: #ff9800;">🚀</div>
+				<h2 style="color: #ff9800;">1. Startup Probe</h2>
+				<ul style="margin-top: 30px; width: 80%; display: inline-block;">
+					<li class="fragment"><strong>Purpose:</strong> Protects slow-starting applications.</li>
+					<li class="fragment"><strong>Behavior:</strong> While the Startup Probe is running, all other probes are disabled.</li>
+					<li class="fragment"><strong>Outcome:</strong> If it fails (times out), K8s kills the container and restarts it. Once it succeeds, it never runs again for the life of the container.</li>
 				</ul>
 			</section>
 
-			<!-- SLIDE 5: Usage -->
+			<!-- Slide 5: Startup Probe Code -->
 			<section>
-				<div class="icon-container">🔌</div>
-				<h2>How to Use Them</h2>
-				<p>Mount Secrets to your Pods as:</p>
-				<div style="display: flex; flex-direction: column; gap: 40px; margin-top: 50px;">
-					<div class="fragment"
-						style="background: #f3e5f5; padding: 40px; border-radius: 20px; font-weight: bold; font-size: 1.8em;">
-						1. Environment Variables 💻</div>
-					<div class="fragment"
-						style="background: #e8f5e9; padding: 40px; border-radius: 20px; font-weight: bold; font-size: 1.8em;">
-						2. Files in a Volume 📁</div>
-				</div>
-			</section>
-
-			<!-- SLIDE 6: YAML -->
-			<section>
-				<h2>Secret YAML</h2>
-				<pre class="code-wrapper"><code class="yaml" data-trim data-noescape>
+				<h2>Startup Probe Configuration</h2>
+				<pre class="code-wrapper"><code class="yaml" data-trim data-line-numbers="1-2|4,6-7|9-11|12-13">
 apiVersion: v1
-kind: Secret
+kind: Pod
 metadata:
-  name: db-pass
-type: Opaque
-data:
-  # Values MUST be Base64 encoded!
-  password: c3VwZXJzZWNyZXQ= 
+  name: slow-legacy-app
+spec:
+  containers:
+  - name: my-app
+    image: my-company/slow-app:v1
+    startupProbe:
+      httpGet:
+        path: /health/startup
+        port: 8080
+      failureThreshold: 30
+      periodSeconds: 10
 				</code></pre>
-				<p class="fragment" style="font-size: 1.5em; margin-top: 50px; color: #666; font-style: italic;">
-					(c3Vw... decodes to "supersecret")</p>
+                <p class="fragment" style="font-size: 0.9em; color: #aaa;">This app gets up to 5 minutes (30 * 10s) to start before K8s gives up.</p>
 			</section>
 
-			<!-- SLIDE 7: Summary -->
-			<section class="gradient-bg">
-				<h2>Recap 🎬</h2>
-				<ul style="line-height: 2; margin-top: 40px;">
-					<li>✅ Decouple secrets from code</li>
-					<li>✅ Store keys, passwords, tokens</li>
-					<li>✅ Base64 Encoded (not encrypted)</li>
-					<li>✅ Mount as Env Vars or Files</li>
+			<!-- Slide 6: Liveness Probe -->
+			<section>
+				<div class="icon-container" style="color: #e91e63;">💓</div>
+				<h2 style="color: #e91e63;">2. Liveness Probe</h2>
+				<ul style="margin-top: 30px; width: 80%; display: inline-block;">
+					<li class="fragment"><strong>Purpose:</strong> Determines if a container needs to be restarted.</li>
+					<li class="fragment"><strong>Behavior:</strong> Runs continuously after the Startup probe succeeds.</li>
+					<li class="fragment"><strong>Outcome:</strong> Catches deadlocks. If the app is stuck and cannot recover itself, the liveness probe fails, and K8s brings up a fresh instance.</li>
 				</ul>
-				<div
-					style="margin-top: 80px; padding: 30px; background: rgba(255,255,255,0.2); border-radius: 20px; display: inline-block;">
-					<p style="margin: 0; font-weight: bold; font-size: 1.2em;">Subscribe for more K8s! 🚀</p>
+			</section>
+
+			<!-- Slide 7: Liveness Probe Code -->
+			<section>
+				<h2>Liveness Probe Configuration</h2>
+				<pre class="code-wrapper"><code class="yaml" data-trim data-line-numbers="2-4|6-8|9-11">
+    # Inside the container spec...
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 8080
+      initialDelaySeconds: 3
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+				</code></pre>
+                <div style="font-size: 0.9em; margin-top: 20px;">
+                    <p class="fragment"><strong>initialDelaySeconds:</strong> Wait before first check.</p>
+                    <p class="fragment"><strong>failureThreshold:</strong> How many strikes before restarting.</p>
+                </div>
+			</section>
+
+			<!-- Slide 8: Readiness Probe -->
+			<section>
+				<div class="icon-container" style="color: #4caf50;">🚦</div>
+				<h2 style="color: #4caf50;">3. Readiness Probe</h2>
+				<ul style="margin-top: 30px; width: 80%; display: inline-block;">
+					<li class="fragment"><strong>Purpose:</strong> Determines if the app is ready to receive user traffic.</li>
+					<li class="fragment"><strong>Behavior:</strong> Runs continuously. Checks if downstream databases or caches are available.</li>
+					<li class="fragment"><strong>Outcome:</strong> If it fails, K8s removes the Pod's IP from the Service endpoints. <em>It does NOT restart the Pod!</em> The app is just temporarily hidden from users.</li>
+				</ul>
+			</section>
+
+			<!-- Slide 9: Readiness Probe Code -->
+			<section>
+				<h2>Readiness Probe Configuration</h2>
+				<pre class="code-wrapper"><code class="yaml" data-trim data-line-numbers="2-5|7-9">
+    # Inside the container spec...
+    readinessProbe:
+      exec:
+        command:
+        - cat
+        - /tmp/ready
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      successThreshold: 1
+				</code></pre>
+                <p class="fragment" style="font-size: 0.9em; margin-top: 20px;">We can use <strong>exec</strong>, <strong>tcpSocket</strong>, or <strong>httpGet</strong> for any probe type!</p>
+			</section>
+
+			<!-- Slide 10: Summary -->
+			<section>
+				<h2>Recap & Summary</h2>
+				<ul class="recap-list" style="margin-top: 40px; list-style-type: '👉 '; display: inline-block; text-align: left;">
+					<li class="fragment"><strong>Startup:</strong> Gives slow apps time to boot. Prevents premature kills.</li>
+					<li class="fragment"><strong>Liveness:</strong> Monitors for catastrophic failures. Restarts the container.</li>
+					<li class="fragment"><strong>Readiness:</strong> Monitors for temporary issues. Pauses incoming traffic.</li>
+				</ul>
+				<div class="fragment" style="margin-top: 60px; padding: 20px; background: rgba(50, 108, 229, 0.2); border-radius: 10px; text-align: center;">
+					<p style="margin: 0; font-weight: bold; font-size: 1.2em;">You need BOTH Liveness and Readiness for robust K8s applications.</p>
 				</div>
 			</section>
 
@@ -215,20 +246,20 @@ data:
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
 	<script>
 		Reveal.initialize({
-			// YouTube Short Dimensions (9:16 aspect ratio, e.g. 1080x1920)
-			width: 1080,
-			height: 1920,
-			margin: 0.05,
-			minScale: 0.1,
+			// Long form 16:9 aspect ratio standard (Desktop / YouTube landscape)
+			width: 1920,
+			height: 1080,
+			margin: 0.04,
+			minScale: 0.2,
 			maxScale: 2.0,
 
 			hash: true,
-			slideNumber: false, // Turn off for cleaner shorts
-			controls: false,    // Turn off arrows for cleaner shorts
-			progress: true,     // Optional progress bar at the bottom
+			slideNumber: 'c/t',   // Show slide numbers (current/total)
+			controls: true,       // Show arrows for navigation
+			progress: true,       // Show progress bar
+            center: true,         // Vertical centering of slides
 			plugins: [RevealHighlight]
 		});
 	</script>
 </body>
-
 </html>
