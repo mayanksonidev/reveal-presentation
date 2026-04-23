@@ -1,0 +1,478 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+	<title>Thumbnail Generator - Multi-Service Deployments</title>
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;800&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
+
+	<!-- Reveal.js CDN -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/night.min.css" id="theme">
+
+	<style>
+		:root {
+			--k8s-blue: #326CE5;
+			--node-green: #4caf50;
+			--mysql-orange: #ff9800;
+			--text-main: #ffffff;
+			--text-muted: #a0aab4;
+			--bg-dark: #0d1117;
+		}
+
+		.reveal,
+		.reveal .slides {
+			font-family: 'Space Grotesk', sans-serif;
+		}
+
+		.reveal h1, .reveal h2, .reveal h3 {
+			font-family: 'Barlow Condensed', sans-serif;
+			font-weight: 900;
+			text-transform: uppercase;
+			margin: 0;
+			line-height: 1.0;
+			letter-spacing: -0.5px;
+		}
+
+		/* ─── SLIDE 1: Without Face ─── */
+		.slide-no-face {
+			position: relative;
+			width: 90%;
+			height: 90%;
+			margin: 5% auto;
+			background: var(--bg-dark);
+			overflow: hidden;
+			display: flex;
+			flex-direction: column;
+			align-items: flex-start;
+			justify-content: center;
+			padding: 70px 80px;
+			box-sizing: border-box;
+			border: 8px solid var(--k8s-blue);
+			border-radius: 40px;
+		}
+
+		/* Background grid texture */
+		.slide-no-face::before {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background-image:
+				linear-gradient(rgba(50, 108, 229, 0.06) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(50, 108, 229, 0.06) 1px, transparent 1px);
+			background-size: 60px 60px;
+			z-index: 0;
+		}
+
+		/* Blue glow blob bottom-right */
+		.slide-no-face::after {
+			content: '';
+			position: absolute;
+			bottom: -200px;
+			right: -100px;
+			width: 700px;
+			height: 700px;
+			background: radial-gradient(circle, rgba(50, 108, 229, 0.18) 0%, transparent 70%);
+			z-index: 0;
+		}
+
+		.no-face-k8s {
+			position: absolute;
+			top: 40px;
+			right: 50px;
+			width: 200px;
+			height: 200px;
+			filter: drop-shadow(0 0 30px rgba(50, 108, 229, 0.5));
+			z-index: 10;
+		}
+
+		.no-face-eyebrow {
+			position: relative;
+			z-index: 5;
+			background: var(--k8s-blue);
+			color: #fff;
+			font-family: 'Barlow Condensed', sans-serif;
+			font-weight: 700;
+			font-size: 1.1em;
+			letter-spacing: 3px;
+			text-transform: uppercase;
+			padding: 8px 22px;
+			border-radius: 4px;
+			display: inline-block;
+			margin-bottom: 22px;
+		}
+
+		.no-face-title {
+			position: relative;
+			z-index: 5;
+			font-family: 'Barlow Condensed', sans-serif;
+			font-weight: 900;
+			font-size: 4.6em;
+			text-transform: uppercase;
+			line-height: 0.95;
+			color: var(--text-main);
+			text-shadow: 0 4px 30px rgba(0,0,0,0.6);
+			margin-bottom: 16px;
+		}
+
+		.no-face-title span {
+			color: var(--k8s-blue);
+		}
+
+		.no-face-hook {
+			position: relative;
+			z-index: 5;
+			font-family: 'Space Grotesk', sans-serif;
+			font-size: 1.3em;
+			color: var(--text-muted);
+			font-weight: 400;
+			margin-bottom: 48px;
+			border-left: 4px solid var(--k8s-blue);
+			padding-left: 18px;
+		}
+
+		.no-face-boxes {
+			position: relative;
+			z-index: 5;
+			display: flex;
+			align-items: center;
+			gap: 28px;
+		}
+
+		.tech-box {
+			padding: 24px 48px;
+			border-radius: 16px;
+			font-family: 'Barlow Condensed', sans-serif;
+			font-weight: 900;
+			font-size: 3.2em;
+			text-transform: uppercase;
+			letter-spacing: 1px;
+			box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+		}
+
+		.tech-box.node {
+			background: rgba(76, 175, 80, 0.08);
+			border: 6px solid var(--node-green);
+			color: var(--node-green);
+			text-shadow: 0 0 30px rgba(76, 175, 80, 0.4);
+		}
+
+		.tech-box.mysql {
+			background: rgba(255, 152, 0, 0.08);
+			border: 6px solid var(--mysql-orange);
+			color: var(--mysql-orange);
+			text-shadow: 0 0 30px rgba(255, 152, 0, 0.4);
+		}
+
+		.lightning {
+			font-size: 6em;
+			filter: drop-shadow(0 0 20px rgba(255, 235, 59, 0.7));
+			line-height: 1;
+		}
+
+		/* ─── SLIDE 2: With Face ─── */
+		.slide-with-face {
+			position: relative;
+			width: 90%;
+			height: 90%;
+			margin: 5% auto;
+			background: var(--bg-dark);
+			overflow: hidden;
+			display: grid;
+			grid-template-columns: 1fr 520px;
+			align-items: center;
+			box-sizing: border-box;
+			border: 8px solid var(--k8s-blue);
+			border-radius: 40px;
+		}
+
+		.slide-with-face::before {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background-image:
+				linear-gradient(rgba(50, 108, 229, 0.06) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(50, 108, 229, 0.06) 1px, transparent 1px);
+			background-size: 60px 60px;
+			z-index: 0;
+		}
+
+		.face-left {
+			position: relative;
+			z-index: 5;
+			padding: 60px 50px 60px 80px;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			gap: 0;
+		}
+
+		.face-eyebrow {
+			background: var(--k8s-blue);
+			color: #fff;
+			font-family: 'Barlow Condensed', sans-serif;
+			font-weight: 700;
+			font-size: 1.1em;
+			letter-spacing: 3px;
+			text-transform: uppercase;
+			padding: 8px 22px;
+			border-radius: 4px;
+			display: inline-block;
+			margin-bottom: 20px;
+			width: fit-content;
+		}
+
+		.face-title {
+			font-family: 'Barlow Condensed', sans-serif;
+			font-weight: 900;
+			font-size: 4.2em;
+			text-transform: uppercase;
+			line-height: 0.95;
+			color: var(--text-main);
+			text-shadow: 0 4px 30px rgba(0,0,0,0.6);
+			margin-bottom: 14px;
+		}
+
+		.face-title span {
+			color: var(--k8s-blue);
+		}
+
+		.face-hook {
+			font-family: 'Space Grotesk', sans-serif;
+			font-size: 1.2em;
+			color: var(--text-muted);
+			font-weight: 400;
+			margin-bottom: 38px;
+			border-left: 4px solid var(--k8s-blue);
+			padding-left: 16px;
+		}
+
+		.face-boxes {
+			display: flex;
+			align-items: center;
+			gap: 20px;
+		}
+
+		.face-boxes .tech-box {
+			font-size: 2.6em;
+			padding: 18px 36px;
+		}
+
+		.face-boxes .lightning {
+			font-size: 4.5em;
+		}
+
+		/* Face panel right */
+		.face-right {
+			position: relative;
+			z-index: 5;
+			height: 100%;
+			display: flex;
+			align-items: flex-end;
+			justify-content: center;
+			overflow: hidden;
+		}
+
+		/* Vertical K8s logo strip */
+		.face-k8s {
+			position: absolute;
+			top: 30px;
+			right: 30px;
+			width: 110px;
+			height: 110px;
+			filter: drop-shadow(0 0 20px rgba(50, 108, 229, 0.6));
+			z-index: 10;
+		}
+
+		/* Blue glow behind face */
+		.face-right::before {
+			content: '';
+			position: absolute;
+			bottom: -100px;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 500px;
+			height: 700px;
+			background: radial-gradient(ellipse, rgba(50, 108, 229, 0.22) 0%, transparent 70%);
+			z-index: 1;
+		}
+
+		/* Face placeholder */
+		.face-placeholder {
+			position: relative;
+			z-index: 5;
+			width: 480px;
+			height: 720px;
+			background: linear-gradient(160deg, #1a2332 0%, #111827 100%);
+			border-radius: 24px 24px 0 0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			border: 3px dashed rgba(50, 108, 229, 0.4);
+			border-bottom: none;
+			gap: 16px;
+			color: rgba(160, 170, 180, 0.6);
+			font-family: 'Space Grotesk', sans-serif;
+		}
+
+		.face-placeholder svg {
+			width: 120px;
+			height: 120px;
+			opacity: 0.3;
+		}
+
+		.face-placeholder-label {
+			font-size: 1.1em;
+			letter-spacing: 2px;
+			text-transform: uppercase;
+			opacity: 0.5;
+		}
+
+		.face-placeholder-sub {
+			font-size: 0.85em;
+			opacity: 0.35;
+			text-align: center;
+			padding: 0 30px;
+		}
+
+		/* Reaction badge */
+		.reaction-badge {
+			position: absolute;
+			top: -30px;
+			left: -20px;
+			background: #ff4757;
+			color: #fff;
+			font-family: 'Barlow Condensed', sans-serif;
+			font-weight: 800;
+			font-size: 1.6em;
+			text-transform: uppercase;
+			letter-spacing: 1px;
+			padding: 10px 24px;
+			border-radius: 10px;
+			transform: rotate(-4deg);
+			box-shadow: 0 10px 30px rgba(255, 71, 87, 0.4);
+			z-index: 20;
+		}
+
+		/* Divider line */
+		.face-divider {
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			width: 3px;
+			background: linear-gradient(to bottom, transparent, var(--k8s-blue), transparent);
+			z-index: 6;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="reveal">
+		<div class="slides">
+
+			<!-- ═══════════════════════════════════════ -->
+			<!-- SLIDE 1: WITHOUT FACE                   -->
+			<!-- ═══════════════════════════════════════ -->
+			<section>
+				<div class="slide-no-face">
+					<!-- K8s logo top right -->
+					<img class="no-face-k8s" src="image.png" alt="Kubernetes Logo" />
+
+					<!-- Eyebrow label -->
+					<div class="no-face-eyebrow">Kubernetes</div>
+
+					<!-- Main title -->
+					<div class="no-face-title">
+						Multi-Service<br>
+						<span>Deployment</span>
+					</div>
+
+					<!-- Hook line -->
+					<div class="no-face-hook">Why your pods can't talk — and how to fix it</div>
+
+					<!-- Tech boxes -->
+					<div class="no-face-boxes">
+						<div class="tech-box node">Node.js</div>
+						<div class="lightning">⚡</div>
+						<div class="tech-box mysql">MySQL</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- ═══════════════════════════════════════ -->
+			<!-- SLIDE 2: WITH FACE                      -->
+			<!-- ═══════════════════════════════════════ -->
+			<section>
+				<div class="slide-with-face">
+					<!-- K8s logo top right -->
+					<img class="face-k8s" src="image.png" alt="Kubernetes Logo" />
+
+					<!-- LEFT: Text content -->
+					<div class="face-left">
+						<div class="face-eyebrow">Kubernetes</div>
+
+						<div class="face-title">
+							Multi-Service<br>
+							<span>Deployment</span>
+						</div>
+
+						<div class="face-hook">Why your pods can't talk — and how to fix it</div>
+
+						<div class="face-boxes">
+							<div class="tech-box node">Node.js</div>
+							<div class="lightning">⚡</div>
+							<div class="tech-box mysql">MySQL</div>
+						</div>
+					</div>
+
+					<!-- RIGHT: Face area -->
+					<div class="face-right">
+						<div class="face-divider"></div>
+
+						<div class="face-placeholder">
+							<!-- Reaction badge -->
+							<div class="reaction-badge">😱 Wait what?</div>
+
+							<!-- Person silhouette icon -->
+							<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<circle cx="50" cy="32" r="22" fill="currentColor"/>
+								<path d="M10 90 C10 65 90 65 90 90" fill="currentColor"/>
+							</svg>
+
+							<div class="face-placeholder-label">Your face here</div>
+							<div class="face-placeholder-sub">Replace this panel with your photo (cropped to 520×1080px, bottom-aligned)</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+		</div>
+	</div>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+	<script>
+		Reveal.initialize({
+			width: 1920,
+			height: 1080,
+			margin: 0.02,
+			minScale: 0.2,
+			maxScale: 2.0,
+
+			controls: true,
+			progress: false,
+			center: false,
+			hash: true,
+			transition: 'none'
+		});
+	</script>
+</body>
+
+</html>

@@ -1,0 +1,171 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+	<title>Thumbnail Generator - Multi-Service Deployments</title>
+
+	<!-- Reveal.js CDN -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/night.min.css" id="theme">
+
+	<style>
+		:root {
+			--k8s-blue: #326CE5;
+			--accent: #ff4081;
+			--text-main: #ffffff;
+		}
+
+		.reveal h1,
+		.reveal h2,
+		.reveal h3 {
+			font-family: 'Helvetica Neue', sans-serif;
+			font-weight: 800;
+			text-transform: none;
+			margin: 0;
+			line-height: 1.1;
+		}
+
+		/* Super large text for thumbnail visibility */
+		.reveal h1 {
+			color: var(--text-main);
+			font-size: 3.5em;
+			text-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+			margin-bottom: 20px;
+		}
+
+		.reveal h2 {
+			color: var(--k8s-blue);
+			font-size: 2.5em;
+			margin-bottom: 20px;
+			text-shadow: 0 8px 15px rgba(0, 0, 0, 0.5);
+		}
+
+		.reveal h3 {
+			color: #a0a0a0;
+			font-size: 1.8em;
+			font-weight: 600;
+		}
+
+		.icon-container {
+			font-size: 5em;
+			margin-bottom: 40px;
+			filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.4));
+		}
+
+		.highlight-bar {
+			background: var(--k8s-blue);
+			color: #fff;
+			padding: 20px 60px;
+			border-radius: 100px;
+			display: inline-block;
+			font-size: 2em;
+			font-weight: bold;
+			margin-top: 50px;
+			box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+		}
+
+		.badge {
+			background: #e91e63;
+			color: #fff;
+			padding: 15px 40px;
+			border-radius: 20px;
+			font-size: 1.5em;
+			font-weight: bold;
+			position: absolute;
+			top: -80px;
+			right: 0;
+			transform: rotate(5deg);
+			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+		}
+
+		/* Decorative elements for thumbnails */
+		.bg-shape {
+			position: absolute;
+			z-index: -1;
+			opacity: 0.1;
+		}
+
+		.corner-k8s-logo {
+			position: absolute;
+			top: -40px;
+			right: -15px;
+			width: 240px;
+			height: 240px;
+			filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.6));
+			z-index: 10;
+		}
+
+		.slide-content-wrapper {
+			position: relative;
+			padding: 60px;
+			width: 90%;
+			margin-left: auto;
+			margin-right: auto;
+			border: 8px solid var(--k8s-blue);
+			border-radius: 40px;
+			box-sizing: border-box;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="reveal">
+		<div class="slides">
+
+
+
+			<!-- Thumbnail Option 5: Boxes and Lightning Bolt -->
+			<section>
+				<img class="corner-k8s-logo" src="image.png" alt="Kubernetes Logo" />
+				<div class="slide-content-wrapper" style="margin-top: -60px;">
+					<h1 style="font-size: 3.2em; margin-bottom: 60px;">Multi-Service</h1>
+					<h1 style="font-size: 3.2em; margin-bottom: 60px;">Deployment</h1>
+					<div style="display: flex; justify-content: center; align-items: center; gap: 40px;">
+						<!-- Node.js Box -->
+						<div
+							style="background: rgba(76, 175, 80, 0.1); border: 8px solid #4caf50; padding: 40px 60px; border-radius: 30px; box-shadow: 0 15px 40px rgba(0,0,0,0.5);">
+							<h2
+								style="color: #4caf50; font-size: 3.5em; margin: 0; text-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);">
+								Node.js</h2>
+						</div>
+
+						<!-- Lightning Bolt -->
+						<div style="font-size: 8em; filter: drop-shadow(0 0 20px rgba(255, 235, 59, 0.6));">⚡️</div>
+
+						<!-- MySQL Box -->
+						<div
+							style="background: rgba(255, 152, 0, 0.1); border: 8px solid #ff9800; padding: 40px 60px; border-radius: 30px; box-shadow: 0 15px 40px rgba(0,0,0,0.5);">
+							<h2
+								style="color: #ff9800; font-size: 3.5em; margin: 0; text-shadow: 0 5px 15px rgba(255, 152, 0, 0.4);">
+								MySQL</h2>
+						</div>
+					</div>
+				</div>
+			</section>
+
+		</div>
+	</div>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+	<script>
+		Reveal.initialize({
+			width: 1920,
+			height: 1080,
+			margin: 0.04,
+			minScale: 0.2,
+			maxScale: 2.0,
+
+			controls: true,
+			progress: false,    // Hide progress bar for clean screenshots
+			center: true,
+			hash: true,
+			transition: 'none'  // No transition so taking screenshots is instant
+		});
+	</script>
+</body>
+
+</html>
