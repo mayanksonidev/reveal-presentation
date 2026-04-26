@@ -1,5 +1,6 @@
 <!doctype html>
 <html>
+
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -12,7 +13,8 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/night.min.css" id="theme">
 
 	<!-- Syntax Highlighting for Code -->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/monokai.min.css">
+	<link rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/monokai.min.css">
 
 	<!-- Custom Styling for Long-Form Desktop Presentation -->
 	<style>
@@ -23,17 +25,31 @@
 			--text-main: #e0e0e0;
 		}
 
-		.reveal h1, .reveal h2, .reveal h3 {
+		.reveal h1,
+		.reveal h2,
+		.reveal h3 {
 			font-family: 'Helvetica Neue', sans-serif;
 			font-weight: bold;
 			text-transform: none;
 		}
 
-		.reveal h1 { color: var(--k8s-blue); font-size: 3.5em; }
-		.reveal h2 { color: var(--k8s-blue); font-size: 2.5em; margin-bottom: 40px; }
-		.reveal h3 { font-size: 1.8em; }
+		.reveal h1 {
+			color: var(--k8s-blue);
+			font-size: 3.5em;
+		}
 
-		.reveal p, .reveal li {
+		.reveal h2 {
+			color: var(--k8s-blue);
+			font-size: 2.5em;
+			margin-bottom: 40px;
+		}
+
+		.reveal h3 {
+			font-size: 1.8em;
+		}
+
+		.reveal p,
+		.reveal li {
 			color: var(--text-main);
 			font-size: 1.2em;
 			line-height: 1.6;
@@ -47,12 +63,15 @@
 			margin: 30px auto;
 		}
 
-        .reveal .code-wrapper code {
-            padding: 30px;
-        }
+		.reveal .code-wrapper code {
+			padding: 30px;
+		}
 
-		.icon-container { font-size: 3em; margin-bottom: 20px; }
-		
+		.icon-container {
+			font-size: 3em;
+			margin-bottom: 20px;
+		}
+
 		.highlight-box {
 			background: rgba(50, 108, 229, 0.15);
 			padding: 30px;
@@ -60,7 +79,7 @@
 			border-left: 5px solid var(--k8s-blue);
 			margin: 30px 0;
 		}
-		
+
 		.sequence-container {
 			display: flex;
 			justify-content: center;
@@ -68,19 +87,24 @@
 			gap: 30px;
 			margin-top: 50px;
 		}
-		
+
 		.sequence-step {
 			background: #2a2a35;
 			padding: 30px;
 			border-radius: 15px;
 			border: 2px solid var(--k8s-blue);
-			width: 300px;
-			box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+			width: 350px;
+			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 		}
-		
-		.sequence-arrow { font-size: 2.5em; color: var(--accent); }
-		
-		.recap-list li { margin-bottom: 20px; }
+
+		.sequence-arrow {
+			font-size: 2.5em;
+			color: var(--accent);
+		}
+
+		.recap-list li {
+			margin-bottom: 20px;
+		}
 	</style>
 </head>
 
@@ -104,7 +128,8 @@
 						<p>K8s only knows if your container process is running.</p>
 						<p>It doesn't know if your app is deadlocked, crashing, or stuck loading data.</p>
 					</div>
-					<div class="highlight-box fragment" style="flex: 1; border-left-color: #2e7d32; background: rgba(46, 125, 50, 0.15); display: flex; flex-direction: column;">
+					<div class="highlight-box fragment"
+						style="flex: 1; border-left-color: #2e7d32; background: rgba(46, 125, 50, 0.15); display: flex; flex-direction: column;">
 						<h3>With Probes ✅</h3>
 						<p>K8s understands the <strong>actual state</strong> of your application.</p>
 						<p>It can automatically restart failed apps and route traffic only when ready.</p>
@@ -140,8 +165,10 @@
 				<h2 style="color: #ff9800;">1. Startup Probe</h2>
 				<ul style="margin-top: 30px; width: 80%; display: inline-block;">
 					<li class="fragment"><strong>Purpose:</strong> Protects slow-starting applications.</li>
-					<li class="fragment"><strong>Behavior:</strong> While the Startup Probe is running, all other probes are disabled.</li>
-					<li class="fragment"><strong>Outcome:</strong> If it fails (times out), K8s kills the container and restarts it. Once it succeeds, it never runs again for the life of the container.</li>
+					<li class="fragment"><strong>Behavior:</strong> While the Startup Probe is running, all other probes
+						are disabled.</li>
+					<li class="fragment"><strong>Outcome:</strong> If it fails (times out), K8s kills the container and
+						restarts it. Once it succeeds, it never runs again for the life of the container.</li>
 				</ul>
 			</section>
 
@@ -164,7 +191,8 @@ spec:
       failureThreshold: 30
       periodSeconds: 10
 				</code></pre>
-                <p class="fragment" style="font-size: 0.9em; color: #aaa;">This app gets up to 5 minutes (30 * 10s) to start before K8s gives up.</p>
+				<p class="fragment" style="font-size: 0.9em; color: #aaa;">This app gets up to 5 minutes (30 * 10s) to
+					start before K8s gives up.</p>
 			</section>
 
 			<!-- Slide 6: Liveness Probe -->
@@ -173,8 +201,10 @@ spec:
 				<h2 style="color: #e91e63;">2. Liveness Probe</h2>
 				<ul style="margin-top: 30px; width: 80%; display: inline-block;">
 					<li class="fragment"><strong>Purpose:</strong> Determines if a container needs to be restarted.</li>
-					<li class="fragment"><strong>Behavior:</strong> Runs continuously after the Startup probe succeeds.</li>
-					<li class="fragment"><strong>Outcome:</strong> Catches deadlocks. If the app is stuck and cannot recover itself, the liveness probe fails, and K8s brings up a fresh instance.</li>
+					<li class="fragment"><strong>Behavior:</strong> Runs continuously after the Startup probe succeeds.
+					</li>
+					<li class="fragment"><strong>Outcome:</strong> Catches deadlocks. If the app is stuck and cannot
+						recover itself, the liveness probe fails, and K8s brings up a fresh instance.</li>
 				</ul>
 			</section>
 
@@ -192,10 +222,10 @@ spec:
       timeoutSeconds: 2
       failureThreshold: 3
 				</code></pre>
-                <div style="font-size: 0.9em; margin-top: 20px;">
-                    <p class="fragment"><strong>initialDelaySeconds:</strong> Wait before first check.</p>
-                    <p class="fragment"><strong>failureThreshold:</strong> How many strikes before restarting.</p>
-                </div>
+				<div style="font-size: 0.9em; margin-top: 20px;">
+					<p class="fragment"><strong>initialDelaySeconds:</strong> Wait before first check.</p>
+					<p class="fragment"><strong>failureThreshold:</strong> How many strikes before restarting.</p>
+				</div>
 			</section>
 
 			<!-- Slide 8: Readiness Probe -->
@@ -203,9 +233,13 @@ spec:
 				<div class="icon-container" style="color: #4caf50;">🚦</div>
 				<h2 style="color: #4caf50;">3. Readiness Probe</h2>
 				<ul style="margin-top: 30px; width: 80%; display: inline-block;">
-					<li class="fragment"><strong>Purpose:</strong> Determines if the app is ready to receive user traffic.</li>
-					<li class="fragment"><strong>Behavior:</strong> Runs continuously. Checks if downstream databases or caches are available.</li>
-					<li class="fragment"><strong>Outcome:</strong> If it fails, K8s removes the Pod's IP from the Service endpoints. <em>It does NOT restart the Pod!</em> The app is just temporarily hidden from users.</li>
+					<li class="fragment"><strong>Purpose:</strong> Determines if the app is ready to receive user
+						traffic.</li>
+					<li class="fragment"><strong>Behavior:</strong> Runs continuously. Checks if downstream databases or
+						caches are available.</li>
+					<li class="fragment"><strong>Outcome:</strong> If it fails, K8s removes the Pod's IP from the
+						Service endpoints. <em>It does NOT restart the Pod!</em> The app is just temporarily hidden from
+						users.</li>
 				</ul>
 			</section>
 
@@ -223,19 +257,26 @@ spec:
       periodSeconds: 5
       successThreshold: 1
 				</code></pre>
-                <p class="fragment" style="font-size: 0.9em; margin-top: 20px;">We can use <strong>exec</strong>, <strong>tcpSocket</strong>, or <strong>httpGet</strong> for any probe type!</p>
+				<p class="fragment" style="font-size: 0.9em; margin-top: 20px;">We can use <strong>exec</strong>,
+					<strong>tcpSocket</strong>, or <strong>httpGet</strong> for any probe type!</p>
 			</section>
 
 			<!-- Slide 10: Summary -->
 			<section>
 				<h2>Recap & Summary</h2>
-				<ul class="recap-list" style="margin-top: 40px; list-style-type: '👉 '; display: inline-block; text-align: left;">
-					<li class="fragment"><strong>Startup:</strong> Gives slow apps time to boot. Prevents premature kills.</li>
-					<li class="fragment"><strong>Liveness:</strong> Monitors for catastrophic failures. Restarts the container.</li>
-					<li class="fragment"><strong>Readiness:</strong> Monitors for temporary issues. Pauses incoming traffic.</li>
+				<ul class="recap-list"
+					style="margin-top: 40px; list-style-type: '👉 '; display: inline-block; text-align: left;">
+					<li class="fragment"><strong>Startup:</strong> Gives slow apps time to boot. Prevents premature
+						kills.</li>
+					<li class="fragment"><strong>Liveness:</strong> Monitors for catastrophic failures. Restarts the
+						container.</li>
+					<li class="fragment"><strong>Readiness:</strong> Monitors for temporary issues. Pauses incoming
+						traffic.</li>
 				</ul>
-				<div class="fragment" style="margin-top: 60px; padding: 20px; background: rgba(50, 108, 229, 0.2); border-radius: 10px; text-align: center;">
-					<p style="margin: 0; font-weight: bold; font-size: 1.2em;">You need BOTH Liveness and Readiness for robust K8s applications.</p>
+				<div class="fragment"
+					style="margin-top: 60px; padding: 20px; background: rgba(50, 108, 229, 0.2); border-radius: 10px; text-align: center;">
+					<p style="margin: 0; font-weight: bold; font-size: 1.2em;">You need BOTH Liveness and Readiness for
+						robust K8s applications.</p>
 				</div>
 			</section>
 
@@ -257,9 +298,10 @@ spec:
 			slideNumber: 'c/t',   // Show slide numbers (current/total)
 			controls: true,       // Show arrows for navigation
 			progress: true,       // Show progress bar
-            center: true,         // Vertical centering of slides
+			center: true,         // Vertical centering of slides
 			plugins: [RevealHighlight]
 		});
 	</script>
 </body>
+
 </html>
