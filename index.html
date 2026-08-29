@@ -1,11 +1,11 @@
 <!doctype html>
-<html>
+<html lang="en">
 
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-	<title>Multi-Service Deployments inside Kubernetes</title>
+	<title>Kubernetes PersistentVolumeClaim (PVC) Specification</title>
 
 	<!-- Reveal.js CDN -->
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
@@ -13,97 +13,214 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/night.min.css" id="theme">
 
 	<!-- Syntax Highlighting for Code -->
-	<link rel="stylesheet"
-		href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/monokai.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/monokai.min.css">
 
-	<!-- Custom Styling for Long-Form Desktop Presentation -->
+	<!-- Google Fonts -->
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+
+	<!-- Custom Visual Styling -->
 	<style>
 		:root {
 			--k8s-blue: #326CE5;
-			--k8s-dark-blue: #1a237e;
-			--accent: #ff4081;
-			--text-main: #e0e0e0;
+			--k8s-cyan: #00d2ff;
+			--accent-green: #4caf50;
+			--accent-amber: #ff9800;
+			--accent-red: #f44336;
+			--accent-purple: #ab47bc;
+			--text-main: #f1f5f9;
+			--text-sub: #94a3b8;
+			--card-bg: #1e293b;
+			--card-border: #334155;
+		}
+
+		body {
+			font-family: 'Inter', system-ui, sans-serif;
+			background-color: #0b0f19;
 		}
 
 		.reveal h1,
 		.reveal h2,
-		.reveal h3 {
-			font-family: 'Helvetica Neue', sans-serif;
-			font-weight: bold;
+		.reveal h3,
+		.reveal h4 {
+			font-family: 'Inter', sans-serif;
+			font-weight: 800;
 			text-transform: none;
+			letter-spacing: -0.02em;
 		}
 
 		.reveal h1 {
-			color: var(--k8s-blue);
-			font-size: 3.5em;
+			color: #ffffff;
+			font-size: 3em;
+			line-height: 1.1;
+		}
+
+		.reveal h1 span.gradient-text {
+			background: linear-gradient(135deg, var(--k8s-cyan), var(--k8s-blue));
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
 		}
 
 		.reveal h2 {
-			color: var(--k8s-blue);
-			font-size: 2.5em;
-			margin-bottom: 40px;
+			color: #ffffff;
+			font-size: 2.1em;
+			margin-bottom: 12px;
 		}
 
 		.reveal h3 {
-			font-size: 1.8em;
+			font-size: 1.4em;
+			color: var(--k8s-cyan);
 		}
 
 		.reveal p,
 		.reveal li {
 			color: var(--text-main);
-			font-size: 1.2em;
-			line-height: 1.6;
+			font-size: 1.05em;
+			line-height: 1.5;
 		}
 
 		.reveal pre.code-wrapper {
-			box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
-			border-radius: 16px;
-			font-size: 1.1em;
-			width: 90%;
-			margin: 30px auto;
+			box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+			border-radius: 10px;
+			font-size: 0.85em;
+			width: 100%;
+			margin: 10px 0;
+			border: 1px solid #334155;
+			background: #0f172a;
 		}
 
-		.reveal .code-wrapper code {
-			padding: 30px;
-		}
-
-		.icon-container {
-			font-size: 3em;
-			margin-bottom: 20px;
+		.reveal pre code {
+			font-family: 'Fira Code', monospace;
+			padding: 16px 20px;
+			max-height: 420px;
+			line-height: 1.38;
 		}
 
 		.highlight-box {
-			background: rgba(50, 108, 229, 0.15);
-			padding: 30px;
-			border-radius: 15px;
+			background: var(--card-bg);
+			padding: 18px 22px;
+			border-radius: 12px;
 			border-left: 5px solid var(--k8s-blue);
-			margin: 30px 0;
+			border-top: 1px solid var(--card-border);
+			border-right: 1px solid var(--card-border);
+			border-bottom: 1px solid var(--card-border);
+			margin: 10px 0;
+			text-align: left;
+			box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 		}
 
-		.sequence-container {
+		.terminal-window {
+			background: #090d16;
+			border-radius: 10px;
+			border: 1px solid #334155;
+			overflow: hidden;
+			text-align: left;
+			box-shadow: 0 15px 30px rgba(0, 0, 0, 0.8);
+			font-family: 'Fira Code', monospace;
+			margin: 10px 0;
+		}
+
+		.terminal-header {
+			background: #1e293b;
+			padding: 8px 14px;
 			display: flex;
-			justify-content: center;
 			align-items: center;
-			gap: 30px;
-			margin-top: 50px;
+			gap: 6px;
+			border-bottom: 1px solid #334155;
 		}
 
-		.sequence-step {
-			background: #2a2a35;
-			padding: 30px;
-			border-radius: 15px;
-			border: 2px solid var(--k8s-blue);
-			width: 300px;
-			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+		.dot {
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			display: inline-block;
 		}
 
-		.sequence-arrow {
-			font-size: 2.5em;
-			color: var(--accent);
+		.dot-red { background: #ff5f56; }
+		.dot-yellow { background: #ffbd2e; }
+		.dot-green { background: #27c93f; }
+
+		.terminal-title {
+			color: #94a3b8;
+			font-size: 0.8em;
+			font-weight: 600;
+			margin-left: 8px;
 		}
 
-		.recap-list li {
-			margin-bottom: 20px;
+		.terminal-body {
+			padding: 14px 18px;
+			color: #e2e8f0;
+			font-size: 0.85em;
+			line-height: 1.5;
+		}
+
+		.cmd-prompt { color: #38bdf8; font-weight: 600; }
+		.cmd-out { color: #94a3b8; }
+		.cmd-success { color: #4ade80; font-weight: 600; }
+
+		.grid-2col {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 20px;
+			align-items: start;
+		}
+
+		.key-point-card {
+			background: var(--card-bg);
+			border-radius: 10px;
+			padding: 14px 18px;
+			border: 1px solid var(--card-border);
+			text-align: left;
+			margin-bottom: 10px;
+		}
+
+		.key-point-card h4 {
+			margin: 0 0 4px 0;
+			font-size: 1.05em;
+		}
+
+		.diff-added {
+			background: rgba(76, 175, 80, 0.15);
+			border-left: 4px solid var(--accent-green);
+			padding: 8px 12px;
+			border-radius: 0 6px 6px 0;
+			margin-top: 6px;
+			font-family: 'Fira Code', monospace;
+			font-size: 0.8em;
+			color: #4ade80;
+		}
+
+		.status-badge-bound {
+			background: #166534;
+			color: #4ade80;
+			padding: 2px 8px;
+			border-radius: 4px;
+			font-weight: 700;
+		}
+
+		.comparison-table {
+			width: 100%;
+			border-collapse: collapse;
+			margin-top: 15px;
+			font-size: 0.9em;
+		}
+
+		.comparison-table th,
+		.comparison-table td {
+			padding: 12px 16px;
+			border: 1px solid var(--card-border);
+			text-align: left;
+		}
+
+		.comparison-table th {
+			background: #1e293b;
+			color: var(--k8s-cyan);
+			font-weight: 700;
+		}
+
+		.comparison-table td {
+			background: var(--card-bg);
 		}
 	</style>
 </head>
@@ -112,144 +229,283 @@
 	<div class="reveal">
 		<div class="slides">
 
-			<!-- Slide 1: Title -->
+			<!-- SLIDE 1: Title Slide -->
 			<section>
-				<div class="icon-container">🔗</div>
-				<h1>Multi-Service Deployments</h1>
-				<h3 style="margin-top: 20px; color: #a0a0a0;">Wiring Node.js & MySQL inside Kubernetes</h3>
-			</section>
-
-			<!-- Slide 2: The Hook -->
-			<section>
-				<h2>The Silent Killer</h2>
-				<div class="highlight-box fragment"
-					style="border-left-color: #e91e63; background: rgba(233, 30, 99, 0.15);">
-					<p style="margin: 0;">Imagine your pods are running... everything <em>looks</em> good.</p>
-				</div>
-				<ul style="margin-top: 30px; width: 80%; display: inline-block; text-align: left;">
-					<li class="fragment">But the frontend can't talk to the backend.</li>
-					<li class="fragment">The backend can't reach the database.</li>
-					<li class="fragment">Your whole app is completely broken, <strong>silently</strong>.</li>
-				</ul>
-				<h3 class="fragment" style="margin-top: 40px; color: #4caf50;">Today, we fix that forever.</h3>
-			</section>
-
-			<!-- Slide 3: What We're Building -->
-			<section>
-				<h2>What We Are Building</h2>
-				<div style="display: flex; gap: 40px; margin-top: 40px; align-items: stretch; justify-content: center;">
-					<div class="highlight-box fragment" style="flex: 1; display: flex; flex-direction: column;">
-						<h3><span style="color: #4caf50;">🟢</span> Node.js Backend</h3>
-						<p>REST API to insert and retrieve data.</p>
-					</div>
-					<div class="sequence-arrow fragment" style="display: flex; align-items: center;">➔</div>
-					<div class="highlight-box fragment"
-						style="flex: 1; border-left-color: #ff9800; background: rgba(255, 152, 0, 0.15); display: flex; flex-direction: column;">
-						<h3><span style="color: #ff9800;">🗄️</span> MySQL Database</h3>
-						<p>Data storage securely isolated inside K8s.</p>
-					</div>
+				<h1>Kubernetes Persistent Storage:<br><span class="gradient-text">PersistentVolumeClaim (PVC)</span></h1>
+				<h3 style="margin-top: 20px; color: var(--text-sub); font-weight: 400;">
+					Configuring Persistent Storage for Stateful Workloads
+				</h3>
+				<div style="margin-top: 40px; display: flex; justify-content: center; gap: 20px;">
+					<span style="background: rgba(50, 108, 229, 0.2); border: 1px solid var(--k8s-blue); padding: 8px 22px; border-radius: 30px; font-weight: 600; color: #60a5fa;">
+						MySQL Deployment
+					</span>
+					<span style="font-size: 1.5em; color: var(--text-sub);">+</span>
+					<span style="background: rgba(76, 175, 80, 0.2); border: 1px solid var(--accent-green); padding: 8px 22px; border-radius: 30px; font-weight: 600; color: #4ade80;">
+						PersistentVolumeClaim
+					</span>
 				</div>
 			</section>
 
-			<!-- Slide 4: Theory 1 -->
+			<!-- SLIDE 2: Without PVC (Ephemeral Storage) -->
 			<section>
-				<div class="icon-container" style="color: #4caf50;">🧩</div>
-				<h2 style="color: #4caf50;">What is a Multi-Service Deployment?</h2>
-				<ul style="margin-top: 30px; width: 80%; display: inline-block;">
-					<li class="fragment">Breaking down applications into smaller, independent components.</li>
-					<li class="fragment">Running different parts (e.g., API & Database) in their own isolated Pods.</li>
-					<li class="fragment">Each service can scale and update independently without affecting others.</li>
-				</ul>
-				<div class="fragment"
-					style="margin-top: 40px; padding: 20px; background: rgba(76, 175, 80, 0.2); border-radius: 10px;">
-					<p style="margin: 0; font-weight: bold;">Why? Better security boundaries, fault isolation, and
-						decoupled architecture.</p>
-				</div>
-			</section>
+				<h2>MySQL Deployment Without PVC</h2>
+				<p style="font-size: 1.05em; color: var(--text-sub); margin-bottom: 12px;">
+					Default container execution uses the temporary container filesystem layer.
+				</p>
 
-			<!-- Slide 5: Theory 2 -->
-			<section>
-				<div class="icon-container" style="color: #f44336;">❓</div>
-				<h2 style="color: #f44336;">The Communication Problem</h2>
-				<ul style="margin-top: 30px; width: 80%; display: inline-block;">
-					<li class="fragment">Pods are <strong>ephemeral</strong> — they are destroyed and recreated
-						constantly.</li>
-					<li class="fragment">Every time a Pod starts, it gets a <em>new internal IP address</em>.</li>
-					<li class="fragment">You cannot hardcode Pod IPs in your application!</li>
-				</ul>
-				<div class="fragment highlight-box"
-					style="margin-top: 40px; border-left-color: #f44336; background: rgba(244, 67, 54, 0.15);">
-					<h3 style="margin: 0; color: #f44336;">How do pods reliably find each other if IPs keep changing?
-					</h3>
-				</div>
-			</section>
-
-			<!-- Slide 6: Theory 3 -->
-			<section>
-				<div class="icon-container" style="color: #03a9f4;">🛡️</div>
-				<h2 style="color: #03a9f4;">Services to the Rescue</h2>
-				<ul style="margin-top: 30px; width: 80%; display: inline-block;">
-					<li class="fragment">A <strong>Service</strong> is an abstraction that provides a stable, unchanging
-						IP Address and DNS name.</li>
-					<li class="fragment">It acts as a load balancer, automatically tracking changing Pod IPs in the
-						background.</li>
-					<li class="fragment"><strong>ClusterIP:</strong> The default service type. It creates an internal IP
-						reachable <em>only</em> from inside the cluster. Perfect for databases!</li>
-				</ul>
-			</section>
-
-			<!-- Slide 7: Theory 4 -->
-			<section>
-				<div class="icon-container" style="color: #ff9800;">🔌</div>
-				<h2 style="color: #ff9800;">How Connection is Established</h2>
-				<div class="sequence-container" style="margin-top: 40px; flex-wrap: wrap;">
-					<div class="sequence-step fragment" style="width: 250px;">
-						<h3 style="color: #4caf50;">1. App Config</h3>
-						<p style="font-size: 0.9em; margin-top: 15px;">App uses the target Service name (e.g.,
-							<code>mysql-svc</code>).
-						</p>
+				<div class="grid-2col">
+					<div>
+						<pre class="code-wrapper"><code class="language-yaml" style="font-size: 0.85em;"># mysql-deployment-no-pvc.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+          # No volumeMounts or volumes configured</code></pre>
 					</div>
-					<div class="sequence-arrow fragment">➔</div>
-					<div class="sequence-step fragment" style="width: 350px;">
-						<h3 style="color: #03a9f4;">2. CoreDNS</h3>
-						<p style="font-size: 0.9em; margin-top: 15px;">K8s built-in DNS resolves <code>mysql-svc</code>
-							to the stable Service IP.</p>
-					</div>
-					<div class="sequence-arrow fragment">➔</div>
-					<div class="sequence-step fragment" style="width: 290px;">
-						<h3 style="color: #ff9800;">3. Routing</h3>
-						<p style="font-size: 0.9em; margin-top: 15px;">Service routes request to a healthy backend Pod.
-						</p>
+
+					<div style="text-align: left;">
+						<div class="highlight-box" style="border-left-color: var(--accent-red); background: rgba(244, 67, 54, 0.1);">
+							<h4 style="color: var(--accent-red); margin: 0 0 8px 0;">State Lifecycle Limitations:</h4>
+							<ul style="margin: 0; padding-left: 18px; font-size: 0.88em;">
+								<li style="margin-bottom: 6px;">Data written to <code>/var/lib/mysql</code> resides in the writable container layer.</li>
+								<li style="margin-bottom: 6px;">Pod restart or deletion replaces the container instance.</li>
+								<li>All database records are destroyed upon pod termination.</li>
+							</ul>
+						</div>
+
+						<div class="terminal-window fragment">
+							<div class="terminal-header">
+								<span class="dot dot-red"></span>
+								<span class="dot dot-yellow"></span>
+								<span class="dot dot-green"></span>
+								<span class="terminal-title">Pod Termination Verification</span>
+							</div>
+							<div class="terminal-body">
+								<div><span class="cmd-prompt">$</span> kubectl delete pod mysql-6879989f5d-xk9z2</div>
+								<div class="cmd-out">pod "mysql-6879989f5d-xk9z2" deleted</div>
+								<div style="margin-top: 6px;"><span class="cmd-prompt">$</span> curl http://localhost:3000/users</div>
+								<div class="cmd-out" style="color: #ef4444;">[] &nbsp;# Data lost on pod recreation</div>
+							</div>
+						</div>
 					</div>
 				</div>
 			</section>
 
-			<!-- Slide 8: Theory 5 -->
+			<!-- SLIDE 3: Step 1 - PVC Manifest -->
 			<section>
-				<div class="icon-container" style="color: #9c27b0;">💡</div>
-				<h2 style="color: #9c27b0;">Crucial Takeaways</h2>
-				<ul
-					style="margin-top: 30px; width: 85%; display: inline-block; text-align: left; list-style-type: '👉 ';">
-					<li class="fragment" style="margin-bottom: 20px;"><strong>Environment Variables:</strong> Pass
-						Service names into your Pods via environment variables (e.g.,
-						<code>DB_HOST=mysql-service</code>). Don't hardcode them.
-					</li>
-					<li class="fragment" style="margin-bottom: 20px;"><strong>Isolation:</strong> Never expose databases
-						to the outside world. Keep them securely on a <code>ClusterIP</code> Service.</li>
-					<li class="fragment" style="margin-bottom: 20px;"><strong>Automatic Load Balancing:</strong> If you
-						have multiple identical backend Pods, the Service automatically load balances traffic among
-						them.</li>
-				</ul>
+				<h2>Step 1: Define PersistentVolumeClaim</h2>
+				<p style="font-size: 1.05em; color: var(--text-sub); margin-bottom: 12px;">
+					Request storage resource allocation independently of the pod lifecycle.
+				</p>
+
+				<div class="grid-2col">
+					<div>
+						<pre class="code-wrapper"><code class="language-yaml" style="font-size: 0.85em;"># mysql-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi</code></pre>
+					</div>
+
+					<div style="text-align: left;">
+						<div class="key-point-card">
+							<h4 style="color: var(--k8s-cyan);">accessModes: ReadWriteOnce (RWO)</h4>
+							<p style="margin: 0; font-size: 0.88em; color: var(--text-sub);">
+								Volume mounted as read-write by a single node.
+							</p>
+						</div>
+
+						<div class="key-point-card">
+							<h4 style="color: var(--accent-green);">resources.requests.storage: 1Gi</h4>
+							<p style="margin: 0; font-size: 0.88em; color: var(--text-sub);">
+								Requests 1 Gigabyte of storage capacity.
+							</p>
+						</div>
+
+						<div class="terminal-window fragment">
+							<div class="terminal-header">
+								<span class="dot dot-red"></span>
+								<span class="dot dot-yellow"></span>
+								<span class="dot dot-green"></span>
+								<span class="terminal-title">kubectl apply & get pvc</span>
+							</div>
+							<div class="terminal-body">
+								<div><span class="cmd-prompt">$</span> kubectl apply -f mysql-pvc.yaml</div>
+								<div class="cmd-out">persistentvolumeclaim/mysql-pvc created</div>
+								<div style="margin-top: 6px;"><span class="cmd-prompt">$</span> kubectl get pvc</div>
+								<div class="cmd-out">
+									NAME &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;STATUS &nbsp;VOLUME &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CAPACITY<br>
+									mysql-pvc &nbsp;<span class="status-badge-bound">Bound</span> &nbsp;pvc-a1b2c3d4 &nbsp;&nbsp;1Gi
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- SLIDE 4: Step 2 - MySQL Deployment with PVC -->
+			<section>
+				<h2>Step 2: Update MySQL Deployment with PVC</h2>
+				<p style="font-size: 1.05em; color: var(--text-sub); margin-bottom: 12px;">
+					Configure <code>volumeMounts</code> and <code>volumes</code> to attach the PersistentVolumeClaim.
+				</p>
+
+				<div class="grid-2col">
+					<div>
+						<pre class="code-wrapper"><code class="language-yaml" style="font-size: 0.82em;"># mysql-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-storage
+          persistentVolumeClaim:
+            claimName: mysql-pvc</code></pre>
+					</div>
+
+					<div style="text-align: left;">
+						<div class="key-point-card fragment">
+							<h4 style="color: var(--accent-amber);">volumeMounts</h4>
+							<p style="margin: 0; font-size: 0.85em; color: var(--text-sub);">
+								Mounts volume <code>mysql-storage</code> at container directory <code>/var/lib/mysql</code>.
+							</p>
+						</div>
+
+						<div class="key-point-card fragment">
+							<h4 style="color: var(--k8s-cyan);">volumes.persistentVolumeClaim</h4>
+							<p style="margin: 0; font-size: 0.85em; color: var(--text-sub);">
+								Binds container storage to <code>claimName: mysql-pvc</code>.
+							</p>
+						</div>
+
+						<div class="diff-added fragment">
+							+ volumeMounts:<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;- name: mysql-storage<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mountPath: /var/lib/mysql<br>
+							+ volumes:<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;- name: mysql-storage<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;persistentVolumeClaim:<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;claimName: mysql-pvc
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- SLIDE 5: Direct Comparison: Spec Diff -->
+			<section>
+				<h2>Manifest Specification Comparison</h2>
+
+				<table class="comparison-table">
+					<thead>
+						<tr>
+							<th style="width: 22%;">Configuration</th>
+							<th style="width: 39%;">Without PVC</th>
+							<th style="width: 39%;">With PVC</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><strong>Storage Location</strong></td>
+							<td>Container local layer (`/var/lib/mysql`)</td>
+							<td>Persistent Volume mounted at `/var/lib/mysql`</td>
+						</tr>
+						<tr>
+							<td><strong>Pod Spec Configuration</strong></td>
+							<td>No `volumes` or `volumeMounts` defined</td>
+							<td>
+								`volumeMounts` defined in container spec<br>
+								`volumes.persistentVolumeClaim` defined in pod spec
+							</td>
+						</tr>
+						<tr>
+							<td><strong>Lifecycle Dependency</strong></td>
+							<td>Tied directly to container instance</td>
+							<td>Decoupled from pod lifecycle</td>
+						</tr>
+						<tr>
+							<td><strong>Pod Recreation Effect</strong></td>
+							<td style="color: var(--accent-red); font-weight: 600;">Data lost permanently</td>
+							<td style="color: var(--accent-green); font-weight: 600;">Data retained and remounted</td>
+						</tr>
+					</tbody>
+				</table>
+			</section>
+
+			<!-- SLIDE 6: Verification & Persistence Test -->
+			<section>
+				<h2>Deployment Verification & Persistence Test</h2>
+
+				<div class="terminal-window" style="max-width: 1050px; margin: 15px auto;">
+					<div class="terminal-header">
+						<span class="dot dot-red"></span>
+						<span class="dot dot-yellow"></span>
+						<span class="dot dot-green"></span>
+						<span class="terminal-title">State Persistence Verification</span>
+					</div>
+					<div class="terminal-body" style="font-size: 0.85em;">
+						<div class="cmd-out"># 1. Apply PVC and Deployment manifests</div>
+						<div><span class="cmd-prompt">$</span> kubectl apply -f mysql-pvc.yaml -f mysql-deployment.yaml</div>
+						<div class="cmd-out">persistentvolumeclaim/mysql-pvc created | deployment.apps/mysql configured</div>
+
+						<div class="cmd-out" style="margin-top: 10px;"># 2. Insert record via database client / API</div>
+						<div><span class="cmd-prompt">$</span> curl -X POST http://localhost:3000/users -d '{"name":"Alice"}'</div>
+						<div class="cmd-success">{"status":"User Alice added successfully"}</div>
+
+						<div class="cmd-out" style="margin-top: 10px;"># 3. Terminate active MySQL pod instance</div>
+						<div><span class="cmd-prompt">$</span> kubectl delete pod mysql-7d6f54c9b-9x2pq</div>
+						<div class="cmd-out">pod "mysql-7d6f54c9b-9x2pq" deleted</div>
+
+						<div class="cmd-out" style="margin-top: 10px;"># 4. Verify data persistence on newly scheduled pod</div>
+						<div><span class="cmd-prompt">$</span> curl http://localhost:3000/users</div>
+						<div class="cmd-success" style="background: rgba(76, 175, 80, 0.18); padding: 2px 8px; border-radius: 4px; display: inline-block;">
+							[{"id":1, "name":"Alice"}] &nbsp;# Record retrieved from persistent storage
+						</div>
+					</div>
+				</div>
 			</section>
 
 		</div>
 	</div>
 
+	<!-- Reveal.js & Plugins JS -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
 	<script>
 		Reveal.initialize({
-			// Long form 16:9 aspect ratio standard (Desktop / YouTube landscape)
+			// 16:9 aspect ratio standard (Desktop / YouTube landscape)
 			width: 1920,
 			height: 1080,
 			margin: 0.04,
