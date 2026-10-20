@@ -5,7 +5,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-	<title>Multi-Service Deployments inside Kubernetes</title>
+	<title>Keycloak + PostgreSQL with Docker Compose</title>
 
 	<!-- Reveal.js CDN -->
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
@@ -16,94 +16,397 @@
 	<link rel="stylesheet"
 		href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/monokai.min.css">
 
-	<!-- Custom Styling for Long-Form Desktop Presentation -->
+	<!-- Google Fonts -->
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link
+		href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+		rel="stylesheet">
+
 	<style>
 		:root {
-			--k8s-blue: #326CE5;
-			--k8s-dark-blue: #1a237e;
-			--accent: #ff4081;
-			--text-main: #e0e0e0;
+			--kc-orange: #e8630a;
+			--kc-orange-lt: #f5832a;
+			--kc-red: #c0392b;
+			--pg-blue: #336791;
+			--pg-blue-lt: #4a9ac4;
+			--accent-green: #27ae60;
+			--accent-warn: #e74c3c;
+			--text-main: #e8e8e8;
+			--text-muted: #a0a0a8;
+			--surface: #1e1e2a;
+			--surface-2: #262636;
+			--border: rgba(232, 99, 10, 0.35);
+		}
+
+		/* ─── Base Typography ─── */
+		.reveal,
+		.reveal p,
+		.reveal li {
+			font-family: 'Inter', 'Helvetica Neue', sans-serif;
+			color: var(--text-main);
 		}
 
 		.reveal h1,
 		.reveal h2,
 		.reveal h3 {
-			font-family: 'Helvetica Neue', sans-serif;
-			font-weight: bold;
+			font-family: 'Inter', 'Helvetica Neue', sans-serif;
+			font-weight: 800;
 			text-transform: none;
+			letter-spacing: -0.5px;
 		}
 
 		.reveal h1 {
-			color: var(--k8s-blue);
-			font-size: 3.5em;
+			font-size: 3.4em;
+			line-height: 1.1;
+			color: #fff;
 		}
 
 		.reveal h2 {
-			color: var(--k8s-blue);
-			font-size: 2.5em;
-			margin-bottom: 40px;
+			font-size: 2.2em;
+			color: var(--kc-orange-lt);
+			margin-bottom: 35px;
 		}
 
 		.reveal h3 {
-			font-size: 1.8em;
+			font-size: 1.4em;
+			color: var(--text-main);
 		}
 
 		.reveal p,
 		.reveal li {
-			color: var(--text-main);
-			font-size: 1.2em;
-			line-height: 1.6;
+			font-size: 1.15em;
+			line-height: 1.65;
 		}
 
+		.reveal code {
+			font-family: 'JetBrains Mono', monospace;
+			background: rgba(255, 255, 255, 0.08);
+			padding: 2px 8px;
+			border-radius: 5px;
+			font-size: 0.88em;
+			color: var(--kc-orange-lt);
+		}
+
+		/* ─── Code Blocks ─── */
 		.reveal pre.code-wrapper {
-			box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
-			border-radius: 16px;
-			font-size: 1.1em;
-			width: 90%;
-			margin: 30px auto;
+			box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+			border-radius: 14px;
+			font-size: 1em;
+			width: 92%;
+			margin: 24px auto;
+			border: 1px solid var(--border);
 		}
 
 		.reveal .code-wrapper code {
-			padding: 30px;
+			padding: 28px 32px;
+			font-family: 'JetBrains Mono', monospace;
 		}
 
-		.icon-container {
-			font-size: 3em;
-			margin-bottom: 20px;
+		/* ─── Utility Components ─── */
+		.icon-lg {
+			font-size: 3.2em;
+			margin-bottom: 16px;
+			display: block;
+		}
+
+		.tag {
+			display: inline-block;
+			background: rgba(232, 99, 10, 0.18);
+			border: 1px solid var(--kc-orange);
+			color: var(--kc-orange-lt);
+			font-size: 0.7em;
+			font-weight: 700;
+			padding: 4px 14px;
+			border-radius: 50px;
+			letter-spacing: 1px;
+			text-transform: uppercase;
+			margin-bottom: 18px;
 		}
 
 		.highlight-box {
-			background: rgba(50, 108, 229, 0.15);
-			padding: 30px;
-			border-radius: 15px;
-			border-left: 5px solid var(--k8s-blue);
-			margin: 30px 0;
+			background: rgba(232, 99, 10, 0.1);
+			padding: 28px 34px;
+			border-radius: 14px;
+			border-left: 5px solid var(--kc-orange);
+			margin: 28px 0;
 		}
 
-		.sequence-container {
+		.highlight-box.blue {
+			background: rgba(51, 103, 145, 0.15);
+			border-left-color: var(--pg-blue-lt);
+		}
+
+		.highlight-box.green {
+			background: rgba(39, 174, 96, 0.12);
+			border-left-color: var(--accent-green);
+		}
+
+		.highlight-box.red {
+			background: rgba(231, 76, 60, 0.12);
+			border-left-color: var(--accent-warn);
+		}
+
+		.highlight-box p {
+			margin: 0;
+		}
+
+		/* ─── Architecture Diagram ─── */
+		.arch-row {
 			display: flex;
 			justify-content: center;
 			align-items: center;
-			gap: 30px;
-			margin-top: 50px;
+			gap: 24px;
+			margin-top: 44px;
+			flex-wrap: wrap;
 		}
 
-		.sequence-step {
-			background: #2a2a35;
-			padding: 30px;
-			border-radius: 15px;
-			border: 2px solid var(--k8s-blue);
-			width: 300px;
-			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+		.arch-box {
+			background: var(--surface-2);
+			border: 2px solid var(--kc-orange);
+			border-radius: 16px;
+			padding: 28px 32px;
+			text-align: center;
+			min-width: 220px;
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+			position: relative;
 		}
 
-		.sequence-arrow {
-			font-size: 2.5em;
-			color: var(--accent);
+		.arch-box.pg {
+			border-color: var(--pg-blue-lt);
 		}
 
-		.recap-list li {
-			margin-bottom: 20px;
+		.arch-box .arch-icon {
+			font-size: 2.6em;
+			display: block;
+			margin-bottom: 8px;
+		}
+
+		.arch-box h3 {
+			margin: 0;
+			font-size: 1.1em;
+			font-weight: 700;
+		}
+
+		.arch-box p {
+			margin: 6px 0 0;
+			font-size: 0.78em;
+			color: var(--text-muted);
+		}
+
+		.arch-arrow {
+			font-size: 2.2em;
+			color: var(--kc-orange-lt);
+		}
+
+		.volume-badge {
+			position: absolute;
+			bottom: -18px;
+			left: 50%;
+			transform: translateX(-50%);
+			background: var(--pg-blue);
+			color: #fff;
+			font-size: 0.65em;
+			font-weight: 700;
+			padding: 3px 12px;
+			border-radius: 20px;
+			white-space: nowrap;
+		}
+
+		/* ─── Step Cards ─── */
+		.steps-grid {
+			display: flex;
+			gap: 22px;
+			margin-top: 40px;
+			justify-content: center;
+			flex-wrap: wrap;
+		}
+
+		.step-card {
+			background: var(--surface-2);
+			border: 1px solid var(--border);
+			border-radius: 14px;
+			padding: 26px 28px;
+			flex: 1;
+			min-width: 220px;
+			max-width: 300px;
+			box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+			text-align: left;
+		}
+
+		.step-card .step-num {
+			font-size: 0.72em;
+			font-weight: 800;
+			color: var(--kc-orange);
+			text-transform: uppercase;
+			letter-spacing: 1px;
+			margin-bottom: 8px;
+		}
+
+		.step-card h3 {
+			font-size: 1.05em;
+			margin: 0 0 10px;
+		}
+
+		.step-card p {
+			font-size: 0.82em;
+			color: var(--text-muted);
+			margin: 0;
+			line-height: 1.5;
+		}
+
+		/* ─── Proof List ─── */
+		.reveal ul.proof-list {
+			list-style: none;
+			margin: 0;
+			padding: 0;
+		}
+
+		.reveal ul.proof-list li {
+			display: flex;
+			align-items: flex-start;
+			gap: 16px;
+			margin-bottom: 26px;
+			font-size: 1.1em;
+		}
+
+		.reveal ul.proof-list li .bullet {
+			flex-shrink: 0;
+			width: 36px;
+			height: 36px;
+			border-radius: 50%;
+			background: rgba(232, 99, 10, 0.2);
+			border: 2px solid var(--kc-orange);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 0.85em;
+			font-weight: 800;
+			color: var(--kc-orange-lt);
+		}
+
+		/* ─── Title slide gradient bg ─── */
+		.slide-title-bg {
+			position: absolute;
+			inset: 0;
+			background: radial-gradient(ellipse at 70% 50%, rgba(232, 99, 10, 0.22) 0%, transparent 65%),
+				radial-gradient(ellipse at 20% 80%, rgba(51, 103, 145, 0.18) 0%, transparent 55%);
+			pointer-events: none;
+		}
+
+		.channel-handle {
+			font-size: 0.72em;
+			color: var(--kc-orange-lt);
+			font-weight: 700;
+			letter-spacing: 1px;
+			margin-top: 10px;
+			display: block;
+		}
+
+		/* ─── Divider line ─── */
+		.divider {
+			width: 60px;
+			height: 4px;
+			background: linear-gradient(90deg, var(--kc-orange), var(--pg-blue-lt));
+			border-radius: 4px;
+			margin: 18px auto;
+		}
+
+		/* ─── Gotcha Grid (Slide 9) ─── */
+		.gotcha-grid {
+			display: flex;
+			flex-direction: column;
+			gap: 12px;
+			margin-top: 12px;
+			width: 90%;
+			margin-left: auto;
+			margin-right: auto;
+		}
+
+		.gotcha-card {
+			background: var(--surface-2);
+			border: 1px solid var(--border);
+			border-radius: 10px;
+			padding: 14px 18px;
+			display: flex;
+			gap: 16px;
+			align-items: center;
+			text-align: left;
+			box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+		}
+
+		.gotcha-num {
+			flex-shrink: 0;
+			width: 34px;
+			height: 34px;
+			border-radius: 50%;
+			background: rgba(232, 99, 10, 0.2);
+			border: 2px solid var(--kc-orange);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 0.9em;
+			font-weight: 800;
+			color: var(--kc-orange-lt);
+		}
+
+		.gotcha-body {
+			display: flex;
+			align-items: center;
+			gap: 20px;
+			flex: 1;
+			min-width: 0;
+		}
+
+		.gotcha-body h3 {
+			font-size: 0.88em;
+			margin: 0;
+			color: var(--text-main);
+			white-space: nowrap;
+			flex-shrink: 0;
+		}
+
+		.gotcha-body p {
+			font-size: 0.76em;
+			color: var(--text-muted);
+			margin: 0;
+			line-height: 1.3;
+			flex-shrink: 0;
+		}
+
+		.gotcha-body .gotcha-sep {
+			color: var(--border);
+			flex-shrink: 0;
+		}
+
+		.gotcha-snippet {
+			flex: 1;
+			min-width: 0;
+		}
+
+		/* ─── Production Checklist (Slide 10) ─── */
+		.prod-list {
+			display: flex;
+			flex-direction: column;
+			gap: 14px;
+		}
+
+		.prod-item {
+			display: flex;
+			align-items: flex-start;
+			gap: 18px;
+			background: var(--surface-2);
+			border: 1px solid var(--border);
+			border-radius: 10px;
+			padding: 14px 20px;
+			text-align: left;
+			font-size: 0.9em;
+			line-height: 1.5;
+		}
+
+		.prod-icon {
+			flex-shrink: 0;
+			font-size: 1.3em;
+			margin-top: 1px;
 		}
 	</style>
 </head>
@@ -112,134 +415,376 @@
 	<div class="reveal">
 		<div class="slides">
 
-			<!-- Slide 1: Title -->
+			<!-- ═══════════════════════════════════════
+			     SLIDE 1 · TITLE
+			     ═══════════════════════════════════════ -->
 			<section>
-				<div class="icon-container">🔗</div>
-				<h1>Multi-Service Deployments</h1>
-				<h3 style="margin-top: 20px; color: #a0a0a0;">Wiring Node.js & MySQL inside Kubernetes</h3>
+				<div class="slide-title-bg"></div>
+				<div class="tag">Docker Compose · Keycloak · PostgreSQL</div>
+				<span class="icon-lg">🔐</span>
+				<h1>Keycloak + PostgreSQL<br>with Docker Compose</h1>
+				<p style="color: var(--text-muted); margin-top: 18px; font-size: 1em;">
+					Persistent realms, users &amp; config — that survive container restarts
+				</p>
+				<div class="divider"></div>
+				<span class="channel-handle">@mayanksonidev</span>
 			</section>
 
-			<!-- Slide 2: The Hook -->
+			<!-- ═══════════════════════════════════════
+			     SLIDE 2 · HOOK
+			     ═══════════════════════════════════════ -->
 			<section>
-				<h2>The Silent Killer</h2>
-				<div class="highlight-box fragment"
-					style="border-left-color: #e91e63; background: rgba(233, 30, 99, 0.15);">
-					<p style="margin: 0;">Imagine your pods are running... everything <em>looks</em> good.</p>
+
+				<h2>What happens when the container dies?</h2>
+
+				<div class="highlight-box red fragment">
+					<p>Your Keycloak users, realms, and that whole hour of config...</p>
 				</div>
-				<ul style="margin-top: 30px; width: 80%; display: inline-block; text-align: left;">
-					<li class="fragment">But the frontend can't talk to the backend.</li>
-					<li class="fragment">The backend can't reach the database.</li>
-					<li class="fragment">Your whole app is completely broken, <strong>silently</strong>.</li>
-				</ul>
-				<h3 class="fragment" style="margin-top: 40px; color: #4caf50;">Today, we fix that forever.</h3>
+
+				<div class="fragment" style="font-size: 2.4em; margin: 24px 0;">💨</div>
+
+				<h3 class="fragment" style="color: var(--accent-warn); font-size: 1.9em;">
+					Poof. Gone. Like it never happened.
+				</h3>
+
+
 			</section>
 
-			<!-- Slide 3: What We're Building -->
+			<!-- ═══════════════════════════════════════
+			     SLIDE 3 · WHAT WE'RE FIXING
+			     ═══════════════════════════════════════ -->
 			<section>
-				<h2>What We Are Building</h2>
-				<div style="display: flex; gap: 40px; margin-top: 40px; align-items: stretch; justify-content: center;">
-					<div class="highlight-box fragment" style="flex: 1; display: flex; flex-direction: column;">
-						<h3><span style="color: #4caf50;">🟢</span> Node.js Backend</h3>
-						<p>REST API to insert and retrieve data.</p>
-					</div>
-					<div class="sequence-arrow fragment" style="display: flex; align-items: center;">➔</div>
-					<div class="highlight-box fragment"
-						style="flex: 1; border-left-color: #ff9800; background: rgba(255, 152, 0, 0.15); display: flex; flex-direction: column;">
-						<h3><span style="color: #ff9800;">🗄️</span> MySQL Database</h3>
-						<p>Data storage securely isolated inside K8s.</p>
-					</div>
-				</div>
-			</section>
 
-			<!-- Slide 4: Theory 1 -->
-			<section>
-				<div class="icon-container" style="color: #4caf50;">🧩</div>
-				<h2 style="color: #4caf50;">What is a Multi-Service Deployment?</h2>
-				<ul style="margin-top: 30px; width: 80%; display: inline-block;">
-					<li class="fragment">Breaking down applications into smaller, independent components.</li>
-					<li class="fragment">Running different parts (e.g., API & Database) in their own isolated Pods.</li>
-					<li class="fragment">Each service can scale and update independently without affecting others.</li>
-				</ul>
-				<div class="fragment"
-					style="margin-top: 40px; padding: 20px; background: rgba(76, 175, 80, 0.2); border-radius: 10px;">
-					<p style="margin: 0; font-weight: bold;">Why? Better security boundaries, fault isolation, and
-						decoupled architecture.</p>
-				</div>
-			</section>
+				<h2>In the next 10 minutes...</h2>
 
-			<!-- Slide 5: Theory 2 -->
-			<section>
-				<div class="icon-container" style="color: #f44336;">❓</div>
-				<h2 style="color: #f44336;">The Communication Problem</h2>
-				<ul style="margin-top: 30px; width: 80%; display: inline-block;">
-					<li class="fragment">Pods are <strong>ephemeral</strong> — they are destroyed and recreated
-						constantly.</li>
-					<li class="fragment">Every time a Pod starts, it gets a <em>new internal IP address</em>.</li>
-					<li class="fragment">You cannot hardcode Pod IPs in your application!</li>
-				</ul>
-				<div class="fragment highlight-box"
-					style="margin-top: 40px; border-left-color: #f44336; background: rgba(244, 67, 54, 0.15);">
-					<h3 style="margin: 0; color: #f44336;">How do pods reliably find each other if IPs keep changing?
-					</h3>
-				</div>
-			</section>
-
-			<!-- Slide 6: Theory 3 -->
-			<section>
-				<div class="icon-container" style="color: #03a9f4;">🛡️</div>
-				<h2 style="color: #03a9f4;">Services to the Rescue</h2>
-				<ul style="margin-top: 30px; width: 80%; display: inline-block;">
-					<li class="fragment">A <strong>Service</strong> is an abstraction that provides a stable, unchanging
-						IP Address and DNS name.</li>
-					<li class="fragment">It acts as a load balancer, automatically tracking changing Pod IPs in the
-						background.</li>
-					<li class="fragment"><strong>ClusterIP:</strong> The default service type. It creates an internal IP
-						reachable <em>only</em> from inside the cluster. Perfect for databases!</li>
-				</ul>
-			</section>
-
-			<!-- Slide 7: Theory 4 -->
-			<section>
-				<div class="icon-container" style="color: #ff9800;">🔌</div>
-				<h2 style="color: #ff9800;">How Connection is Established</h2>
-				<div class="sequence-container" style="margin-top: 40px; flex-wrap: wrap;">
-					<div class="sequence-step fragment" style="width: 250px;">
-						<h3 style="color: #4caf50;">1. App Config</h3>
-						<p style="font-size: 0.9em; margin-top: 15px;">App uses the target Service name (e.g.,
-							<code>mysql-svc</code>).
-						</p>
-					</div>
-					<div class="sequence-arrow fragment">➔</div>
-					<div class="sequence-step fragment" style="width: 350px;">
-						<h3 style="color: #03a9f4;">2. CoreDNS</h3>
-						<p style="font-size: 0.9em; margin-top: 15px;">K8s built-in DNS resolves <code>mysql-svc</code>
-							to the stable Service IP.</p>
-					</div>
-					<div class="sequence-arrow fragment">➔</div>
-					<div class="sequence-step fragment" style="width: 290px;">
-						<h3 style="color: #ff9800;">3. Routing</h3>
-						<p style="font-size: 0.9em; margin-top: 15px;">Service routes request to a healthy backend Pod.
-						</p>
-					</div>
-				</div>
-			</section>
-
-			<!-- Slide 8: Theory 5 -->
-			<section>
-				<div class="icon-container" style="color: #9c27b0;">💡</div>
-				<h2 style="color: #9c27b0;">Crucial Takeaways</h2>
-				<ul
-					style="margin-top: 30px; width: 85%; display: inline-block; text-align: left; list-style-type: '👉 ';">
-					<li class="fragment" style="margin-bottom: 20px;"><strong>Environment Variables:</strong> Pass
-						Service names into your Pods via environment variables (e.g.,
-						<code>DB_HOST=mysql-service</code>). Don't hardcode them.
+				<ul class="proof-list" style="width: 80%; margin: 0 auto; margin-top: 10px;">
+					<li class="fragment">
+						<span class="bullet">1</span>
+						<span>Run <strong>Keycloak</strong> backed by <strong>PostgreSQL</strong> using Docker
+							Compose</span>
 					</li>
-					<li class="fragment" style="margin-bottom: 20px;"><strong>Isolation:</strong> Never expose databases
-						to the outside world. Keep them securely on a <code>ClusterIP</code> Service.</li>
-					<li class="fragment" style="margin-bottom: 20px;"><strong>Automatic Load Balancing:</strong> If you
-						have multiple identical backend Pods, the Service automatically load balances traffic among
-						them.</li>
+					<li class="fragment">
+						<span class="bullet">2</span>
+						<span>Configure a real realm &amp; users that <em>actually persist</em></span>
+					</li>
+					<li class="fragment">
+						<span class="bullet">3</span>
+						<span>Destroy <strong>everything on camera</strong> and bring it back — same realm, same users,
+							zero tears</span>
+					</li>
 				</ul>
+
+				<div class="fragment highlight-box green"
+					style="margin-top: 36px; width: 80%; margin-left: auto; margin-right: auto;">
+					<p>I'll prove it works by blowing it up and rebuilding it live.</p>
+				</div>
+			</section>
+
+			<!-- ═══════════════════════════════════════
+			     SLIDE 4 · INTRO
+			     ═══════════════════════════════════════ -->
+			<section>
+
+				<span class="icon-lg">👋</span>
+				<h2>Hey, I'm Mayank</h2>
+				<p style="font-size: 1.2em; width: 75%; margin: 0 auto;">
+					I do <strong>DevOps for a living</strong>, and on this channel I build things, break them,
+					and show you how to fix them.
+				</p>
+
+				<div class="steps-grid" style="margin-top: 36px; justify-content: center;">
+					<div class="step-card fragment">
+						<div class="step-num">Topics</div>
+						<h3>🔐 Keycloak &amp; IAM</h3>
+						<p>Real-world identity and access management setups</p>
+					</div>
+					<div class="step-card fragment">
+						<div class="step-num">Topics</div>
+						<h3>⚙️ DevOps</h3>
+						<p>Docker, Compose, CI/CD, and beyond</p>
+					</div>
+					<div class="step-card fragment">
+						<div class="step-num">Topics</div>
+						<h3>🤖 AI Experiments</h3>
+						<p>The occasional AI rabbit hole</p>
+					</div>
+				</div>
+
+				<p class="fragment"
+					style="margin-top: 40px; color: var(--kc-orange-lt); font-weight: 700; font-size: 1.05em;">
+					If that sounds like your kind of chaos — hit subscribe. Let's build it.
+				</p>
+			</section>
+
+			<!-- ═══════════════════════════════════════
+			     SLIDE 5 · WHY DATA VANISHES
+			     ═══════════════════════════════════════ -->
+			<section>
+
+				<h2>Why your data keeps vanishing</h2>
+
+				<div class="arch-row">
+					<!-- Keycloak box -->
+					<div class="arch-box fragment">
+						<span class="arch-icon">🔐</span>
+						<h3>Keycloak</h3>
+						<p>start-dev mode</p>
+					</div>
+					<div class="arch-arrow fragment">➔</div>
+					<!-- H2 box -->
+					<div class="arch-box fragment" style="border-color: var(--accent-warn);">
+						<span class="arch-icon">💾</span>
+						<h3>H2 Database</h3>
+						<p>Built-in · lives <em>inside</em> the container</p>
+					</div>
+				</div>
+
+				<div class="highlight-box red fragment"
+					style="margin-top: 40px; width: 82%; margin-left: auto; margin-right: auto;">
+					<p>
+						Container goes away? <strong>Database goes away.</strong><br>
+						Great for a 5-min demo. Terrible for literally anything else.
+					</p>
+				</div>
+			</section>
+
+			<!-- ═══════════════════════════════════════
+			     SLIDE 6 · THE SOLUTION ARCHITECTURE
+			     ═══════════════════════════════════════ -->
+			<section>
+
+				<h2>Give Keycloak a proper memory</h2>
+
+				<div class="arch-row">
+					<!-- Keycloak box -->
+					<div class="arch-box fragment">
+						<span class="arch-icon">🔐</span>
+						<h3 style="color: var(--kc-orange-lt);">Keycloak</h3>
+						<p>The brains</p>
+					</div>
+					<div class="arch-arrow fragment">➔</div>
+					<!-- Postgres box -->
+					<div class="arch-box pg fragment" style="padding-bottom: 42px;">
+						<span class="arch-icon">🐘</span>
+						<h3 style="color: var(--pg-blue-lt);">PostgreSQL</h3>
+						<p>The memory</p>
+						<span class="volume-badge">📦 Docker Volume</span>
+					</div>
+				</div>
+
+				<div class="highlight-box blue fragment"
+					style="margin-top: 50px; width: 82%; margin-left: auto; margin-right: auto;">
+					<p>
+						The <strong>volume</strong> is Docker saying: <em>"Relax, I'll keep this somewhere safe —
+							outside the container."</em>
+					</p>
+				</div>
+			</section>
+
+			<!-- ═══════════════════════════════════════
+			     SLIDE 7 · DOCKER COMPOSE OVERVIEW
+			     ═══════════════════════════════════════ -->
+			<section>
+				<div class="tag">docker-compose.yml</div>
+				<h2>The stack at a glance</h2>
+
+				<pre class="code-wrapper"><code class="language-yaml" data-trim data-noescape>
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB:       keycloak
+      POSTGRES_USER:     keycloak
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    command: start-dev
+    environment:
+      KC_DB:          postgres
+      KC_DB_URL:      jdbc:postgresql://postgres/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+				</code></pre>
+			</section>
+
+			<!-- ═══════════════════════════════════════
+			     SLIDE 8 · KEY CONCEPTS RECAP
+			     ═══════════════════════════════════════ -->
+			<section>
+
+				<h2>Three things making this work</h2>
+
+				<div class="steps-grid" style="margin-top: 36px;">
+					<div class="step-card fragment">
+						<div class="step-num">1 · Separation</div>
+						<h3>🐘 Postgres in its own container</h3>
+						<p>Keycloak and Postgres are decoupled — each can restart independently.</p>
+					</div>
+					<div class="step-card fragment">
+						<div class="step-num">2 · Persistence</div>
+						<h3>📦 Named Volume</h3>
+						<p><code>postgres_data</code> lives on the Docker host, not inside the container.</p>
+					</div>
+					<div class="step-card fragment">
+						<div class="step-num">3 · Secrets</div>
+						<h3>🔑 .env file</h3>
+						<p>Passwords stay out of your compose file and out of version control.</p>
+					</div>
+				</div>
+			</section>
+
+			<!-- ═══════════════════════════════════════
+			     SLIDE 9 · FOUR THINGS THAT WILL BITE YOU
+			     ═══════════════════════════════════════ -->
+			<section>
+
+				<h2>Four things that will bite you</h2>
+				<p style="font-size: 0.9em; color: var(--text-muted); margin-bottom: 30px;">I've hit all of these so you
+					don't have to.</p>
+
+				<div class="gotcha-grid">
+
+					<div class="gotcha-card fragment">
+						<div class="gotcha-num">1</div>
+						<div class="gotcha-body">
+							<h3>🔌 Keycloak can't connect to the database</h3>
+							<span class="gotcha-sep">·</span>
+							<p>The host in <code>KC_DB_URL</code> is <code>localhost</code>. Should be the service name.</p>
+							<div class="gotcha-snippet"><pre class="code-wrapper" style="margin: 0; font-size: 0.7em;"><code class="language-yaml" data-trim>KC_DB_URL: jdbc:postgresql://postgres/keycloak</code></pre></div>
+						</div>
+					</div>
+
+					<div class="gotcha-card fragment">
+						<div class="gotcha-num">2</div>
+						<div class="gotcha-body">
+							<h3>🔑 Changed the password, now nothing works</h3>
+							<span class="gotcha-sep">·</span>
+							<p>Postgres only sets credentials when the volume is <em>empty</em>. Old password sticks.</p>
+							<div class="gotcha-snippet"><pre class="code-wrapper" style="margin: 0; font-size: 0.7em;"><code class="language-bash" data-trim>docker compose down -v && docker compose up -d</code></pre></div>
+						</div>
+					</div>
+
+					<div class="gotcha-card fragment">
+						<div class="gotcha-num">3</div>
+						<div class="gotcha-body">
+							<h3>🚪 Port 8080 is already taken</h3>
+							<span class="gotcha-sep">·</span>
+							<p>Change the <em>left</em> side of the mapping, not the right.</p>
+							<div class="gotcha-snippet"><pre class="code-wrapper" style="margin: 0; font-size: 0.7em;"><code class="language-yaml" data-trim>ports:
+  - "8081:8080"</code></pre></div>
+						</div>
+					</div>
+
+					<div class="gotcha-card fragment">
+						<div class="gotcha-num">4</div>
+						<div class="gotcha-body">
+							<h3>🔄 Keycloak keeps restarting</h3>
+							<span class="gotcha-sep">·</span>
+							<p>Give the Postgres healthcheck more retries or a longer interval.</p>
+							<div class="gotcha-snippet"><pre class="code-wrapper" style="margin: 0; font-size: 0.7em;"><code class="language-yaml" data-trim>healthcheck:
+  retries: 10
+  interval: 5s</code></pre></div>
+						</div>
+					</div>
+
+				</div>
+			</section>
+
+			<!-- ═══════════════════════════════════════
+			     SLIDE 10 · IS THIS PRODUCTION-READY?
+			     ═══════════════════════════════════════ -->
+			<section>
+
+				<h2>Is this production-ready?</h2>
+
+				<div class="highlight-box red"
+					style="margin-bottom: 30px; width: 82%; margin-left: auto; margin-right: auto;">
+					<p><strong>Honest answer: not yet.</strong> <code>start-dev</code> is called <em>dev mode</em> for a
+						reason.</p>
+				</div>
+
+				<div class="prod-list" style="width: 84%; margin: 0 auto;">
+					<div class="prod-item fragment">
+						<span class="prod-icon">⚙️</span>
+						<div><strong><code>start</code> instead of <code>start-dev</code></strong> — plus a real
+							hostname (<code>KC_HOSTNAME</code>), TLS, or a reverse proxy in front</div>
+					</div>
+					<div class="prod-item fragment">
+						<span class="prod-icon">🔒</span>
+						<div><strong>Passwords out of the Compose file</strong> — into an <code>.env</code> file or
+							proper secrets manager</div>
+					</div>
+					<div class="prod-item fragment">
+						<span class="prod-icon">📌</span>
+						<div><strong>Pinned image versions</strong> — and Postgres not exposed to the outside world
+						</div>
+					</div>
+					<div class="prod-item fragment">
+						<span class="prod-icon">💾</span>
+						<div><strong>Backups of that volume</strong> — <code>pg_dump</code> is your friend</div>
+					</div>
+					<div class="prod-item fragment">
+						<span class="prod-icon">❤️</span>
+						<div><strong>Health endpoints on</strong> — <code>KC_HEALTH_ENABLED=true</code>, served on port <code>9000</code> · perfect for Kubernetes liveness and readiness probes</div>
+					</div>
+				</div>
+
+				<p class="fragment"
+					style="margin-top: 28px; color: var(--kc-orange-lt); font-weight: 700; font-size: 1em;">
+					Each of those could be its own video. Tell me in the comments which one you want first. 👇
+				</p>
+			</section>
+
+			<!-- ═══════════════════════════════════════
+			     SLIDE 11 · RECAP
+			     ═══════════════════════════════════════ -->
+			<section>
+
+				<span class="icon-lg">✅</span>
+				<h2>Quick recap</h2>
+
+				<ul class="proof-list" style="width: 82%; margin: 0 auto; margin-top: 8px;">
+					<li class="fragment">
+						<span class="bullet"
+							style="background: rgba(231,76,60,0.2); border-color: var(--accent-warn); color: var(--accent-warn);">✗</span>
+						<span>Default Keycloak stores data <strong>inside the container</strong> — it dies with
+							it</span>
+					</li>
+					<li class="fragment">
+						<span class="bullet">✓</span>
+						<span>The fix: <strong>PostgreSQL + a named volume</strong></span>
+					</li>
+					<li class="fragment">
+						<span class="bullet">✓</span>
+						<span>A <strong>healthcheck</strong> and <code>depends_on</code> make Keycloak wait for the
+							database</span>
+					</li>
+					<li class="fragment">
+						<span class="bullet">✓</span>
+						<span>Use the <strong>service name</strong>, not <code>localhost</code></span>
+					</li>
+					<li class="fragment">
+						<span class="bullet"
+							style="background: rgba(231,76,60,0.2); border-color: var(--accent-warn); color: var(--accent-warn);">!</span>
+						<span><code>down</code> keeps your data · <code>down -v</code> <strong>deletes
+								it</strong></span>
+					</li>
+				</ul>
+
+				<div class="highlight-box green fragment"
+					style="margin-top: 30px; width: 82%; margin-left: auto; margin-right: auto;">
+					<p>If this helped, subscribe — more Keycloak &amp; DevOps content coming. 🔔</p>
+				</div>
 			</section>
 
 		</div>
@@ -249,7 +794,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
 	<script>
 		Reveal.initialize({
-			// Long form 16:9 aspect ratio standard (Desktop / YouTube landscape)
+			// 16:9 landscape — matches YouTube/screen recording
 			width: 1920,
 			height: 1080,
 			margin: 0.04,
@@ -257,10 +802,10 @@
 			maxScale: 2.0,
 
 			hash: true,
-			slideNumber: 'c/t',   // Show slide numbers (current/total)
-			controls: true,       // Show arrows for navigation
-			progress: true,       // Show progress bar
-			center: true,         // Vertical centering of slides
+			slideNumber: 'c/t',
+			controls: true,
+			progress: true,
+			center: true,
 			plugins: [RevealHighlight]
 		});
 	</script>
